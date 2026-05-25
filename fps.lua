@@ -1,4 +1,4 @@
--- UG Hub - FPS Counter Ultimate Edition v4.0
+-- UG Hub - FPS Counter Ultimate Edition v4.1
 -- วางใน StarterPlayerScripts
 
 local Players = game:GetService("Players")
@@ -7,12 +7,10 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local Stats = game:GetService("Stats")
 local TeleportService = game:GetService("TeleportService")
-local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ตรวจสอบอุปกรณ์
 local function getDevice()
     if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
         local platform = UserInputService:GetPlatform()
@@ -38,7 +36,6 @@ local settings = {
     locked=false,
     preset={A={},B={}},
     sessionStart=os.time(),
-    whitelistedUsers={"regretevator638"}, -- เพิ่ม username ที่อนุญาตตรงนี้
 }
 
 local themes = {
@@ -65,7 +62,6 @@ end
 loadSettings()
 settings.sessionStart=os.time()
 
--- ===== GUI =====
 local screenGui=Instance.new("ScreenGui")
 screenGui.Name="UGHub"
 screenGui.ResetOnSpawn=false
@@ -158,8 +154,8 @@ end
 
 -- ===== LOGIN SCREEN =====
 local loginFrame=Instance.new("Frame")
-loginFrame.Size=UDim2.new(0,280,0,320)
-loginFrame.Position=UDim2.new(0.5,-140,0.5,-160)
+loginFrame.Size=UDim2.new(0,280,0,340)
+loginFrame.Position=UDim2.new(0.5,-140,0.5,-170)
 loginFrame.BackgroundColor3=Color3.fromRGB(12,12,12)
 loginFrame.BackgroundTransparency=0.05
 loginFrame.BorderSizePixel=0
@@ -168,88 +164,109 @@ loginFrame.Active=true
 loginFrame.Parent=screenGui
 Instance.new("UICorner",loginFrame).CornerRadius=UDim.new(0,14)
 
--- Logo/Title
+local avatarFrame=Instance.new("Frame")
+avatarFrame.Size=UDim2.new(0,70,0,70)
+avatarFrame.Position=UDim2.new(0.5,-35,0,12)
+avatarFrame.BackgroundColor3=Color3.fromRGB(30,30,30)
+avatarFrame.BorderSizePixel=0
+avatarFrame.ZIndex=51
+avatarFrame.Parent=loginFrame
+Instance.new("UICorner",avatarFrame).CornerRadius=UDim.new(1,0)
+
+local avatarImg=Instance.new("ImageLabel")
+avatarImg.Size=UDim2.new(1,0,1,0)
+avatarImg.BackgroundTransparency=1
+avatarImg.Image="rbxthumb://type=AvatarHeadShot&id="..player.UserId.."&w=150&h=150"
+avatarImg.ZIndex=52
+avatarImg.Parent=avatarFrame
+Instance.new("UICorner",avatarImg).CornerRadius=UDim.new(1,0)
+
 local logoLabel=Instance.new("TextLabel")
-logoLabel.Size=UDim2.new(1,0,0,60)
-logoLabel.Position=UDim2.new(0,0,0,10)
+logoLabel.Size=UDim2.new(1,0,0,30)
+logoLabel.Position=UDim2.new(0,0,0,88)
 logoLabel.BackgroundTransparency=1
 logoLabel.Text="🎯 UG Hub"
 logoLabel.Font=Enum.Font.GothamBold
-logoLabel.TextSize=28
+logoLabel.TextSize=24
 logoLabel.TextColor3=Color3.fromRGB(100,200,255)
 logoLabel.TextXAlignment=Enum.TextXAlignment.Center
 logoLabel.ZIndex=51
 logoLabel.Parent=loginFrame
 
 local subLabel=Instance.new("TextLabel")
-subLabel.Size=UDim2.new(1,0,0,20)
-subLabel.Position=UDim2.new(0,0,0,62)
+subLabel.Size=UDim2.new(1,0,0,18)
+subLabel.Position=UDim2.new(0,0,0,120)
 subLabel.BackgroundTransparency=1
 subLabel.Text="FPS Monitor Ultimate"
 subLabel.Font=Enum.Font.Gotham
-subLabel.TextSize=12
+subLabel.TextSize=11
 subLabel.TextColor3=Color3.fromRGB(150,150,150)
 subLabel.TextXAlignment=Enum.TextXAlignment.Center
 subLabel.ZIndex=51
 subLabel.Parent=loginFrame
 
--- Device Info
 local deviceLabel=Instance.new("TextLabel")
-deviceLabel.Size=UDim2.new(1,-20,0,20)
-deviceLabel.Position=UDim2.new(0,10,0,88)
+deviceLabel.Size=UDim2.new(1,-20,0,18)
+deviceLabel.Position=UDim2.new(0,10,0,140)
 deviceLabel.BackgroundTransparency=1
 deviceLabel.Text="Device: "..getDevice()
 deviceLabel.Font=Enum.Font.Gotham
-deviceLabel.TextSize=11
-deviceLabel.TextColor3=Color3.fromRGB(120,120,120)
+deviceLabel.TextSize=10
+deviceLabel.TextColor3=Color3.fromRGB(100,100,100)
 deviceLabel.TextXAlignment=Enum.TextXAlignment.Center
 deviceLabel.ZIndex=51
 deviceLabel.Parent=loginFrame
 
--- Divider
 local divider=Instance.new("Frame")
 divider.Size=UDim2.new(1,-40,0,1)
-divider.Position=UDim2.new(0,20,0,115)
+divider.Position=UDim2.new(0,20,0,163)
 divider.BackgroundColor3=Color3.fromRGB(50,50,50)
-divider.BorderSizePixel=0
-divider.ZIndex=51
+divider.BorderSizePixel=0; divider.ZIndex=51
 divider.Parent=loginFrame
 
--- Username label
 local userLbl=Instance.new("TextLabel")
-userLbl.Size=UDim2.new(1,-20,0,20)
-userLbl.Position=UDim2.new(0,10,0,125)
+userLbl.Size=UDim2.new(1,-20,0,18)
+userLbl.Position=UDim2.new(0,10,0,172)
 userLbl.BackgroundTransparency=1
 userLbl.Text="Roblox Username"
 userLbl.Font=Enum.Font.Gotham
-userLbl.TextSize=12
+userLbl.TextSize=11
 userLbl.TextColor3=Color3.fromRGB(180,180,180)
 userLbl.TextXAlignment=Enum.TextXAlignment.Left
 userLbl.ZIndex=51
 userLbl.Parent=loginFrame
 
--- Username Input
 local inputBox=Instance.new("TextBox")
-inputBox.Size=UDim2.new(1,-20,0,38)
-inputBox.Position=UDim2.new(0,10,0,148)
+inputBox.Size=UDim2.new(1,-20,0,36)
+inputBox.Position=UDim2.new(0,10,0,192)
 inputBox.BackgroundColor3=Color3.fromRGB(30,30,30)
 inputBox.BorderSizePixel=0
-inputBox.Text=""
-inputBox.PlaceholderText="ใส่ชื่อ Roblox ของคุณ..."
-inputBox.PlaceholderColor3=Color3.fromRGB(100,100,100)
+inputBox.Text=player.Name
 inputBox.Font=Enum.Font.Gotham
 inputBox.TextSize=13
 inputBox.TextColor3=Color3.fromRGB(255,255,255)
-inputBox.ZIndex=52
-inputBox.Active=true
+inputBox.PlaceholderText="ใส่ชื่อ Roblox ของคุณ..."
+inputBox.PlaceholderColor3=Color3.fromRGB(100,100,100)
+inputBox.ZIndex=52; inputBox.Active=true
 inputBox.ClearTextOnFocus=false
 inputBox.Parent=loginFrame
 Instance.new("UICorner",inputBox).CornerRadius=UDim.new(0,8)
 
--- Status label
+inputBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local name=inputBox.Text
+    if name~="" then
+        local ok,userId=pcall(function()
+            return Players:GetUserIdFromNameAsync(name)
+        end)
+        if ok and userId then
+            avatarImg.Image="rbxthumb://type=AvatarHeadShot&id="..userId.."&w=150&h=150"
+        end
+    end
+end)
+
 local statusLabel=Instance.new("TextLabel")
-statusLabel.Size=UDim2.new(1,-20,0,20)
-statusLabel.Position=UDim2.new(0,10,0,192)
+statusLabel.Size=UDim2.new(1,-20,0,18)
+statusLabel.Position=UDim2.new(0,10,0,232)
 statusLabel.BackgroundTransparency=1
 statusLabel.Text=""
 statusLabel.Font=Enum.Font.Gotham
@@ -259,19 +276,14 @@ statusLabel.TextXAlignment=Enum.TextXAlignment.Center
 statusLabel.ZIndex=51
 statusLabel.Parent=loginFrame
 
--- Login Button
-local loginBtn=makeBtn(loginFrame,UDim2.new(0,10,0,216),UDim2.new(1,-20,0,40),"🔐 เข้าใช้งาน",Color3.fromRGB(40,130,220),51)
+local loginBtn=makeBtn(loginFrame,UDim2.new(0,10,0,254),UDim2.new(1,-20,0,40),"🔐 เข้าใช้งาน",Color3.fromRGB(40,130,220),51)
 loginBtn.TextSize=14
 
--- Auto-fill username
-inputBox.Text=player.Name
-
--- Info bottom
 local infoLabel=Instance.new("TextLabel")
-infoLabel.Size=UDim2.new(1,0,0,30)
-infoLabel.Position=UDim2.new(0,0,1,-35)
+infoLabel.Size=UDim2.new(1,0,0,24)
+infoLabel.Position=UDim2.new(0,0,1,-28)
 infoLabel.BackgroundTransparency=1
-infoLabel.Text="UG Hub v4.0 | by regretevator638"
+infoLabel.Text="UG Hub v4.1 | by regretevator638"
 infoLabel.Font=Enum.Font.Gotham
 infoLabel.TextSize=10
 infoLabel.TextColor3=Color3.fromRGB(80,80,80)
@@ -279,7 +291,7 @@ infoLabel.TextXAlignment=Enum.TextXAlignment.Center
 infoLabel.ZIndex=51
 infoLabel.Parent=loginFrame
 
--- ===== MAIN UI (ซ่อนก่อน) =====
+-- ===== MAIN UI =====
 local mainUI=Instance.new("Frame")
 mainUI.Size=UDim2.new(1,0,1,0)
 mainUI.BackgroundTransparency=1
@@ -287,7 +299,6 @@ mainUI.Visible=false
 mainUI.ZIndex=1
 mainUI.Parent=screenGui
 
--- ===== Main Frame =====
 local mainFrame=Instance.new("Frame")
 mainFrame.Size=UDim2.new(0,settings.width,0,settings.height)
 mainFrame.Position=UDim2.new(settings.posX,0,settings.posY,0)
@@ -306,7 +317,6 @@ local srvLabel  =makeLabel(mainFrame,UDim2.new(0.5,2,0,20),UDim2.new(0.5,-36,0,1
 local netLabel  =makeLabel(mainFrame,UDim2.new(0,8,0,40), UDim2.new(0.5,-10,0,12),10,false,2)
 local pcLabel   =makeLabel(mainFrame,UDim2.new(0.5,2,0,36),UDim2.new(0.5,-36,0,12),10,false,2)
 local timeLabel =makeLabel(mainFrame,UDim2.new(0,8,0,54), UDim2.new(1,-44,0,12),10,false,2)
-local deviceInfoLabel=makeLabel(mainFrame,UDim2.new(0,8,0,54),UDim2.new(1,-44,0,12),9,false,2)
 
 fpsLabel.Text="FPS: --"; pingLabel.Text="Ping: --"
 memLabel.Text="MEM: --"; srvLabel.Text="SRV: --"
@@ -316,7 +326,6 @@ timeLabel.Text="🕐 0m 0s"
 local settingsBtn=makeBtn(mainFrame,UDim2.new(1,-52,0,3),UDim2.new(0,22,0,20),"⚙",Color3.fromRGB(60,60,60),3)
 local minBtn=makeBtn(mainFrame,UDim2.new(1,-27,0,3),UDim2.new(0,20,0,20),"–",Color3.fromRGB(60,60,60),3)
 
--- Graph
 local graphFrame=Instance.new("Frame")
 graphFrame.Size=UDim2.new(1,0,0,24)
 graphFrame.Position=UDim2.new(0,0,1,-48)
@@ -361,7 +370,6 @@ addDrag(mainFrame,function()
     saveSettings()
 end)
 
--- Mini Mode
 local miniFrame=Instance.new("Frame")
 miniFrame.Size=UDim2.new(0,72,0,24)
 miniFrame.Position=mainFrame.Position
@@ -445,7 +453,6 @@ closeBtn.MouseButton1Click:Connect(function() panel.Visible=false end)
 addDrag(panel,nil)
 addResizeHandle(panel,200,260,22,function() saveSettings() end)
 
--- Tab Bar
 local tabBar=Instance.new("Frame")
 tabBar.Size=UDim2.new(1,0,0,32)
 tabBar.Position=UDim2.new(0,0,0,36)
@@ -461,14 +468,11 @@ local tabBtns={}
 
 for i,icon in ipairs(tabNames) do
     local tb=makeBtn(tabBar,UDim2.new((i-1)/5,2,0,2),UDim2.new(1/5,-4,1,-4),icon,Color3.fromRGB(40,40,40),22)
-    tb.TextSize=14
-    tabBtns[i]=tb
-
+    tb.TextSize=14; tabBtns[i]=tb
     local tl=makeLabel(tb,UDim2.new(0,0,0.5,2),UDim2.new(1,0,0,10),8,false,23)
     tl.Text=tabLabels[i]
     tl.TextXAlignment=Enum.TextXAlignment.Center
     tl.TextColor3=Color3.fromRGB(180,180,180)
-
     local page=Instance.new("Frame")
     page.Size=UDim2.new(1,0,1,-68)
     page.Position=UDim2.new(0,0,0,68)
@@ -492,7 +496,6 @@ for i,tb in ipairs(tabBtns) do
 end
 switchTab(1)
 
--- Slider
 local function createSlider(parent,labelText,yPos,minVal,maxVal,currentVal,step,zIdx,callback)
     local lbl=makeLabel(parent,UDim2.new(0,10,0,yPos),UDim2.new(1,-60,0,18),12,false,zIdx)
     lbl.Text=labelText
@@ -500,33 +503,26 @@ local function createSlider(parent,labelText,yPos,minVal,maxVal,currentVal,step,
     valLbl.Text=tostring(currentVal)
     valLbl.TextColor3=Color3.fromRGB(100,180,255)
     valLbl.TextXAlignment=Enum.TextXAlignment.Right
-
     local track=Instance.new("Frame")
     track.Size=UDim2.new(1,-20,0,5)
     track.Position=UDim2.new(0,10,0,yPos+20)
     track.BackgroundColor3=Color3.fromRGB(55,55,55)
     track.BorderSizePixel=0; track.ZIndex=zIdx
-    track.Active=true
-    track.Parent=parent
+    track.Active=true; track.Parent=parent
     Instance.new("UICorner",track).CornerRadius=UDim.new(1,0)
-
     local fill=Instance.new("Frame")
     fill.Size=UDim2.new((currentVal-minVal)/(maxVal-minVal),0,1,0)
     fill.BackgroundColor3=Color3.fromRGB(100,180,255)
     fill.BorderSizePixel=0; fill.ZIndex=zIdx+1
-    fill.Active=true
-    fill.Parent=track
+    fill.Active=true; fill.Parent=track
     Instance.new("UICorner",fill).CornerRadius=UDim.new(1,0)
-
     local knob=Instance.new("TextButton")
     knob.Size=UDim2.new(0,14,0,14)
     knob.Position=UDim2.new((currentVal-minVal)/(maxVal-minVal),-7,0.5,-7)
     knob.BackgroundColor3=Color3.fromRGB(255,255,255)
     knob.BorderSizePixel=0; knob.Text=""; knob.ZIndex=zIdx+2
-    knob.Active=true
-    knob.Parent=track
+    knob.Active=true; knob.Parent=track
     Instance.new("UICorner",knob).CornerRadius=UDim.new(1,0)
-
     local sliding=false
     knob.InputBegan:Connect(function(inp)
         if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then sliding=true end
@@ -554,9 +550,7 @@ createSlider(colorPage,"🔴 Red",4,0,255,settings.textColor.r,1,22,function(v) 
 createSlider(colorPage,"🟢 Green",54,0,255,settings.textColor.g,1,22,function(v) settings.textColor.g=v; settings.autoColor=false; fpsLabel.TextColor3=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b); saveSettings() end)
 createSlider(colorPage,"🔵 Blue",104,0,255,settings.textColor.b,1,22,function(v) settings.textColor.b=v; settings.autoColor=false; fpsLabel.TextColor3=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b); saveSettings() end)
 createSlider(colorPage,"⬜ BG Opacity",154,0,100,(1-settings.bgTransparency)*100,1,22,function(v)
-    settings.bgTransparency=1-(v/100)
-    mainFrame.BackgroundTransparency=settings.bgTransparency
-    saveSettings()
+    settings.bgTransparency=1-(v/100); mainFrame.BackgroundTransparency=settings.bgTransparency; saveSettings()
 end)
 local autoBtn=makeBtn(colorPage,UDim2.new(0,10,0,204),UDim2.new(1,-20,0,28),
     "Auto Color: "..(settings.autoColor and "ON" or "OFF"),
@@ -574,11 +568,11 @@ createSlider(sysPage,"⚡ Update Speed (วิ)",4,0.1,2.0,settings.updateInterv
     settings.updateInterval=v; saveSettings()
 end)
 local lockBtn=makeBtn(sysPage,UDim2.new(0,10,0,54),UDim2.new(1,-20,0,28),
-    settings.locked and "🔒 Position Locked" or "🔓 Position Unlocked",
+    settings.locked and "🔒 Locked" or "🔓 Unlocked",
     settings.locked and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60),22)
 lockBtn.MouseButton1Click:Connect(function()
     settings.locked=not settings.locked
-    lockBtn.Text=settings.locked and "🔒 Position Locked" or "🔓 Position Unlocked"
+    lockBtn.Text=settings.locked and "🔒 Locked" or "🔓 Unlocked"
     lockBtn.BackgroundColor3=settings.locked and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60)
     saveSettings()
 end)
@@ -592,19 +586,15 @@ local themePage=tabPages[3]
 local themeNames={"Dark","Neon","Minimal","Sad","Sunset","Matrix","Sakura"}
 local themeBtns={}
 for i,name in ipairs(themeNames) do
-    local col=(i-1)%2
-    local row=math.floor((i-1)/2)
+    local col=(i-1)%2; local row=math.floor((i-1)/2)
     local tb=makeBtn(themePage,UDim2.new(col*0.5,col==0 and 10 or 4,0,4+row*36),UDim2.new(0.5,-14,0,28),name,
         settings.theme==name and Color3.fromRGB(60,180,100) or Color3.fromRGB(50,50,50),22)
     tb.TextSize=12; themeBtns[name]=tb
     tb.MouseButton1Click:Connect(function()
         settings.theme=name
         local t=themes[name]
-        mainFrame.BackgroundColor3=t.bg
-        panel.BackgroundColor3=t.bg
-        for _,l in ipairs({fpsLabel,pingLabel,memLabel,srvLabel,netLabel,pcLabel,timeLabel,miniFpsLabel}) do
-            l.TextColor3=t.text
-        end
+        mainFrame.BackgroundColor3=t.bg; panel.BackgroundColor3=t.bg
+        for _,l in ipairs({fpsLabel,pingLabel,memLabel,srvLabel,netLabel,pcLabel,timeLabel,miniFpsLabel}) do l.TextColor3=t.text end
         for n,b in pairs(themeBtns) do b.BackgroundColor3=n==name and Color3.fromRGB(60,180,100) or Color3.fromRGB(50,50,50) end
         saveSettings()
     end)
@@ -645,26 +635,21 @@ local infoPage=tabPages[5]
 local infoTexts={
     {"👤 Username", player.Name},
     {"📱 Device", getDevice()},
-    {"🎮 Game", tostring(game.PlaceId)},
+    {"🎮 Place ID", tostring(game.PlaceId)},
     {"🌐 Server", game.JobId~="" and game.JobId:sub(1,8).."..." or "Studio"},
     {"👥 Players", tostring(#Players:GetPlayers()).."/"..tostring(game.Players.MaxPlayers)},
-    {"🔧 Version", "UG Hub v4.0"},
+    {"🔧 Version", "UG Hub v4.1"},
 }
 for i,info in ipairs(infoTexts) do
     local row=Instance.new("Frame")
-    row.Size=UDim2.new(1,-16,0,28)
-    row.Position=UDim2.new(0,8,0,(i-1)*32)
-    row.BackgroundColor3=Color3.fromRGB(30,30,30)
-    row.BackgroundTransparency=0.3
-    row.BorderSizePixel=0; row.ZIndex=22
-    row.Parent=infoPage
+    row.Size=UDim2.new(1,-16,0,28); row.Position=UDim2.new(0,8,0,(i-1)*32)
+    row.BackgroundColor3=Color3.fromRGB(30,30,30); row.BackgroundTransparency=0.3
+    row.BorderSizePixel=0; row.ZIndex=22; row.Parent=infoPage
     Instance.new("UICorner",row).CornerRadius=UDim.new(0,6)
     local kl=makeLabel(row,UDim2.new(0,8,0,0),UDim2.new(0.5,0,1,0),11,true,23)
-    kl.Text=info[1]
-    kl.TextColor3=Color3.fromRGB(180,180,180)
+    kl.Text=info[1]; kl.TextColor3=Color3.fromRGB(180,180,180)
     local vl=makeLabel(row,UDim2.new(0.5,0,0,0),UDim2.new(0.5,-8,1,0),11,false,23)
-    vl.Text=info[2]
-    vl.TextXAlignment=Enum.TextXAlignment.Right
+    vl.Text=info[2]; vl.TextXAlignment=Enum.TextXAlignment.Right
     vl.TextColor3=Color3.fromRGB(100,200,255)
 end
 
@@ -678,11 +663,10 @@ warnFrame.BackgroundColor3=Color3.fromRGB(200,50,50)
 warnFrame.BackgroundTransparency=0.2
 warnFrame.BorderSizePixel=0
 warnFrame.Visible=false; warnFrame.ZIndex=30
-warnFrame.Active=true
-warnFrame.Parent=mainUI
+warnFrame.Active=true; warnFrame.Parent=mainUI
 Instance.new("UICorner",warnFrame).CornerRadius=UDim.new(0,8)
 local warnLabel=makeLabel(warnFrame,UDim2.new(0,0,0,0),UDim2.new(1,0,1,0),13,true,31)
-warnLabel.Text="⚠️ FPS ต่ำมาก! กำลัง Lag"
+warnLabel.Text="⚠️ FPS ต่ำมาก! กลัง Lag"
 warnLabel.TextColor3=Color3.fromRGB(255,255,255)
 warnLabel.TextXAlignment=Enum.TextXAlignment.Center
 
@@ -698,37 +682,38 @@ end
 
 -- ===== LOGIN LOGIC =====
 local function checkLogin(username)
-    username=username:lower():gsub("%s+","")
-    for _,allowed in ipairs(settings.whitelistedUsers) do
-        if username==allowed:lower() then return true end
-    end
-    -- ตรวจสอบว่าเป็น username ของตัวเองหรือเปล่า
-    if username==player.Name:lower() then return true end
-    return false
+    username=username:gsub("%s+","")
+    if username=="" then return false,"⚠️ กรุณาใสชื่อก่อน" end
+    local ok,userId=pcall(function()
+        return Players:GetUserIdFromNameAsync(username)
+    end)
+    if not ok then return false,"❌ ไม่พบ Username นี้ใน Roblox" end
+    if userId~=player.UserId then return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อย" end
+    return true,"✅ ยืนยันตัวตนสำเร็จ!"
 end
 
 loginBtn.MouseButton1Click:Connect(function()
-    local username=inputBox.Text
-    if username=="" then
-        statusLabel.Text="⚠️ กรุณาใส่ชื่อก่อน"
-        statusLabel.TextColor3=Color3.fromRGB(255,150,50)
-        return
-    end
-    if checkLogin(username) then
-        statusLabel.Text="✅ เข้าใช้งานสำเร็จ!"
-        statusLabel.TextColor3=Color3.fromRGB(80,255,120)
-        task.delay(0.8,function()
-            loginFrame.Visible=false
-            mainUI.Visible=true
-        end)
-    else
-        statusLabel.Text="❌ Username ไม่ได้รับอนุญาต"
-        statusLabel.TextColor3=Color3.fromRGB(255,80,80)
-        loginFrame.BackgroundColor3=Color3.fromRGB(40,10,10)
-        task.delay(0.5,function()
-            loginFrame.BackgroundColor3=Color3.fromRGB(12,12,12)
-        end)
-    end
+    statusLabel.Text="🔄 กำลังตรวจสอบ..."
+    statusLabel.TextColor3=Color3.fromRGB(255,210,50)
+    loginBtn.Active=false
+    task.spawn(function()
+        local success,msg=checkLogin(inputBox.Text)
+        statusLabel.Text=msg
+        if success then
+            statusLabel.TextColor3=Color3.fromRGB(80,255,120)
+            task.delay(0.8,function()
+                loginFrame.Visible=false
+                mainUI.Visible=true
+            end)
+        else
+            statusLabel.TextColor3=Color3.fromRGB(255,80,80)
+            loginFrame.BackgroundColor3=Color3.fromRGB(40,10,10)
+            task.delay(0.5,function()
+                loginFrame.BackgroundColor3=Color3.fromRGB(12,12,12)
+                loginBtn.Active=true
+            end)
+        end
+    end)
 end)
 
 -- ===== FPS Loop =====
@@ -738,7 +723,6 @@ RunService.RenderStepped:Connect(function(dt)
     if elapsed>=settings.updateInterval then
         local fps=math.round(frameCount/elapsed)
         frameCount=0; elapsed=0
-
         local fpsColor
         if settings.autoColor then
             fpsColor=fps>=60 and Color3.fromRGB(80,255,120) or fps>=30 and Color3.fromRGB(255,210,50) or Color3.fromRGB(255,70,70)
@@ -747,29 +731,21 @@ RunService.RenderStepped:Connect(function(dt)
         end
         fpsLabel.TextColor3=fpsColor; fpsLabel.Text="FPS: "..fps
         miniFpsLabel.TextColor3=fpsColor; miniFpsLabel.Text="FPS: "..fps
-
         local ok1,ping=pcall(function() return math.round(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
         if ok1 then
             pingLabel.TextColor3=ping<80 and Color3.fromRGB(80,255,120) or ping<150 and Color3.fromRGB(255,210,50) or Color3.fromRGB(255,70,70)
             pingLabel.Text="Ping: "..ping.."ms"
         end
-
         local ok2,mem=pcall(function() return math.round(Stats:GetTotalMemoryUsageMb()) end)
         memLabel.Text=ok2 and "MEM: "..mem.."MB" or "MEM: --"
-
         local ok3,srvFps=pcall(function() return math.round(Stats.Network.ServerStatsItem["Server FPS"]:GetValue()) end)
         srvLabel.Text=ok3 and "SRV: "..srvFps.."fps" or "SRV: --"
-
         local ok4,netIn=pcall(function() return math.round(Stats.Network.ServerStatsItem["Data Receive KB/s"]:GetValue()) end)
         netLabel.Text=ok4 and "Net: "..netIn.."KB/s" or "Net: --"
-
         pcLabel.Text="👥 "..#Players:GetPlayers()
-
         local secs=os.time()-settings.sessionStart
-        local mins=math.floor(secs/60)
-        local hrs=math.floor(mins/60)
+        local mins=math.floor(secs/60); local hrs=math.floor(mins/60)
         timeLabel.Text=hrs>0 and "🕐 "..hrs.."h "..mins%60 .."m" or "🕐 "..mins.."m "..secs%60 .."s"
-
         updateGraph(fps)
         if fps<settings.fpsWarnThreshold then showWarning() end
     end
