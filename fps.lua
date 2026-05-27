@@ -15,8 +15,8 @@
 local CONFIG = {
 
     -- [ ข้อมูลทั่วไป ]
-    HUB_NAME    = "UG Hub ทดลองก่อนใช้งานจริง",               -- ชื่อโปรแกรม
-    VERSION     = "v9.9",                 -- เวอร์ชั่น
+    HUB_NAME    = "UG Hub",               -- ชื่อโปรแกรม
+    VERSION     = "v6.2",                 -- เวอร์ชั่น
     AUTHOR      = "regretevator638",       -- ชื่อผู้สร้าง
     DISCORD     = "discord.gg/v6Qh69hqd", -- ลิงค์ Discord
 
@@ -40,7 +40,7 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        "regretevator638",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
         -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
@@ -971,7 +971,7 @@ local function checkLogin(username)
     -- ตรวจ Dev Accounts ก่อนเลย เร็วที่สุด ไม่ต้องรอ API
     for _,dev in ipairs(CONFIG.DEV_ACCOUNTS) do
         if username:lower()==dev:lower() then
-            return true,"👑 Developer Account"
+            return true,"👑 Developer Account ยินดีต้อนรับ!"
         end
     end
 
@@ -994,7 +994,7 @@ loginBtn.MouseButton1Click:Connect(function()
         if success then
             statusLabel.TextColor3=Color3.fromRGB(80,255,120)
             tweenFrame(loginFrame,{BackgroundTransparency=1},0.3)
-            task.delay(0.3,function() loginFrame.Visible=false; mainUI.Visible=true end)
+            task.delay(1,function() loginFrame.Visible=false; mainUI.Visible=true end)
         else
             statusLabel.TextColor3=Color3.fromRGB(255,80,80)
             tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(40,10,10)},0.1)
