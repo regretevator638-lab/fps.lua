@@ -1,5 +1,80 @@
--- UG Hub v6.1 - LocalScript
--- วางใน StarterPlayerScripts
+-- ================================================================
+--   ██╗   ██╗ ██████╗     ██╗  ██╗██╗   ██╗██████╗ 
+--   ██║   ██║██╔════╝     ██║  ██║██║   ██║██╔══██╗
+--   ██║   ██║██║  ███╗    ███████║██║   ██║██████╔╝
+--   ██║   ██║██║   ██║    ██╔══██║██║   ██║██╔══██╗
+--   ╚██████╔╝╚██████╔╝    ██║  ██║╚██████╔╝██████╔╝
+--    ╚═════╝  ╚═════╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
+-- ================================================================
+--   วางใน StarterPlayerScripts (LocalScript)
+-- ================================================================
+
+-- ================================================================
+--             ⚙️  CONFIG — แก้ตรงนี้ได้เลย!
+-- ================================================================
+local CONFIG = {
+
+    -- [ ข้อมูลทั่วไป ]
+    HUB_NAME    = "UG Hub",               -- ชื่อโปรแกรม
+    VERSION     = "v6.2",                 -- เวอร์ชั่น
+    AUTHOR      = "regretevator638",       -- ชื่อผู้สร้าง
+    DISCORD     = "discord.gg/v6Qh69hqd", -- ลิงค์ Discord
+
+    -- [ UI เริ่มต้น ]
+    DEFAULT_THEME            = "Dark",    -- ธีม: Dark Neon Minimal Sad Sunset Matrix Sakura Cyberpunk Ocean Blood Gold
+    DEFAULT_BG_TRANSPARENCY  = 0.4,       -- ความโปร่งใสพื้นหลัง (0=ทึบ, 1=ใส)
+    DEFAULT_FPS_COLOR        = {r=80, g=255, b=120}, -- สีตัวอักษร FPS
+    DEFAULT_CORNER_RADIUS    = 10,        -- ความโค้งมน (0-20)
+    GLOW_ENABLED             = true,      -- เปิด/ปิด Glow รอบ UI
+    AUTO_COLOR               = true,      -- เปลี่ยนสีตาม FPS อัตโนมัติ
+
+    -- [ ขนาด UI เริ่มต้น ]
+    MAIN_WIDTH  = 220,
+    MAIN_HEIGHT = 110,
+
+    -- [ ระบบแจ้งเตือน ]
+    FPS_WARN         = 20,    -- แจ้งเตือนเมื่อ FPS ต่ำกว่านี้
+    PING_WARN        = 150,   -- แจ้งเตือนเมื่อ Ping สูงกว่านี้ (ms)
+    AUTO_REJOIN_FPS  = 0,     -- Auto Rejoin เมื่อ FPS ต่ำกว่านี้ (0 = ปิด)
+    UPDATE_INTERVAL  = 0.5,   -- ความเร็วอ่านค่า (วินาที)
+
+    -- [ Whitelist — ใครบ้างที่เข้าได้นอกจากตัวเอง ]
+    WHITELIST = {
+        -- "username1",
+        -- "username2",
+    },
+
+    -- [ แสดง/ซ่อนข้อมูลแต่ละอัน ]
+    SHOW = {
+        FPS        = true,
+        PING       = true,
+        MEMORY     = true,
+        SERVER_FPS = true,
+        NETWORK    = true,
+        PLAYERS    = true,
+        TIME       = true,
+        CLOCK      = true,
+        HEALTH     = true,
+        WALKSPEED  = true,
+        GAMEMODE   = true,
+        FRAMETIME  = true,
+    },
+
+    -- [ Watermark จางๆ กลาง UI ]
+    WATERMARK_ENABLED      = true,
+    WATERMARK_TRANSPARENCY = 0.82, -- 0=เห็นชัด, 1=ซ่อน
+
+    -- [ สีธีม Login Screen ]
+    LOGIN_GLOW_COLOR = {r=100, g=200, b=255},
+    LOGIN_TITLE_COLOR = {r=100, g=200, b=255},
+
+    -- [ ตำแหน่ง UI เริ่มต้น (0-1) ]
+    START_POS_X = 0.02,
+    START_POS_Y = 0.08,
+}
+-- ================================================================
+--                 โค้ดหลัก — ไม่ต้องแตะ!
+-- ================================================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -11,13 +86,6 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-
--- รอ RemoteEvents จาก Server
-local remotes = game.ReplicatedStorage:WaitForChild("UGHubRemotes", 10)
-local saveEvent = remotes and remotes:WaitForChild("SaveSettings", 5)
-local loadFunc = remotes and remotes:WaitForChild("LoadSettings", 5)
-
-local WHITELIST = {}
 
 local function getDeviceDetail()
     local platform = UserInputService:GetPlatform()
@@ -57,26 +125,38 @@ local function getDeviceDetail()
     else return "Unknown ❓" end
 end
 
+-- Settings (โหลดจาก CONFIG เป็นค่าเริ่มต้น)
 local settings = {
-    posX=0.02, posY=0.08,
-    width=220, height=110,
-    textColor={r=80,g=255,b=120},
-    bgTransparency=0.4,
-    autoColor=true,
-    theme="Dark",
-    minimized=false,
-    fpsWarnThreshold=20,
-    pingWarnThreshold=150,
-    updateInterval=0.5,
-    locked=false,
-    saves={},
-    sessionStart=os.time(),
-    glowEnabled=true,
-    autoRejoinFps=0,
-    cornerRadius=10,
-    showFps=true, showPing=true, showMem=true, showSrv=true,
-    showNet=true, showPlayers=true, showTime=true, showClock=true,
-    showHealth=true, showWalkspeed=true, showGameMode=true, showFrameTime=true,
+    posX             = CONFIG.START_POS_X,
+    posY             = CONFIG.START_POS_Y,
+    width            = CONFIG.MAIN_WIDTH,
+    height           = CONFIG.MAIN_HEIGHT,
+    textColor        = {r=CONFIG.DEFAULT_FPS_COLOR.r, g=CONFIG.DEFAULT_FPS_COLOR.g, b=CONFIG.DEFAULT_FPS_COLOR.b},
+    bgTransparency   = CONFIG.DEFAULT_BG_TRANSPARENCY,
+    autoColor        = CONFIG.AUTO_COLOR,
+    theme            = CONFIG.DEFAULT_THEME,
+    minimized        = false,
+    fpsWarnThreshold = CONFIG.FPS_WARN,
+    pingWarnThreshold= CONFIG.PING_WARN,
+    updateInterval   = CONFIG.UPDATE_INTERVAL,
+    locked           = false,
+    saves            = {},
+    sessionStart     = os.time(),
+    glowEnabled      = CONFIG.GLOW_ENABLED,
+    autoRejoinFps    = CONFIG.AUTO_REJOIN_FPS,
+    cornerRadius     = CONFIG.DEFAULT_CORNER_RADIUS,
+    showFps          = CONFIG.SHOW.FPS,
+    showPing         = CONFIG.SHOW.PING,
+    showMem          = CONFIG.SHOW.MEMORY,
+    showSrv          = CONFIG.SHOW.SERVER_FPS,
+    showNet          = CONFIG.SHOW.NETWORK,
+    showPlayers      = CONFIG.SHOW.PLAYERS,
+    showTime         = CONFIG.SHOW.TIME,
+    showClock        = CONFIG.SHOW.CLOCK,
+    showHealth       = CONFIG.SHOW.HEALTH,
+    showWalkspeed    = CONFIG.SHOW.WALKSPEED,
+    showGameMode     = CONFIG.SHOW.GAMEMODE,
+    showFrameTime    = CONFIG.SHOW.FRAMETIME,
 }
 
 local themes = {
@@ -99,27 +179,19 @@ local function addNotif(msg, color)
     if #notifHistory > 50 then table.remove(notifHistory, 1) end
 end
 
--- โหลดจาก DataStore ผ่าน Server
 local function loadSettings()
-    if loadFunc then
-        local ok, data = pcall(function() return loadFunc:InvokeServer() end)
-        if ok and data then
-            local ok2, decoded = pcall(function() return HttpService:JSONDecode(data) end)
-            if ok2 and decoded then
-                for k,v in pairs(decoded) do settings[k]=v end
-            end
+    local saved = playerGui:GetAttribute("UGHub_Settings")
+    if saved then
+        local ok, decoded = pcall(function() return HttpService:JSONDecode(saved) end)
+        if ok and decoded then
+            for k,v in pairs(decoded) do settings[k]=v end
         end
     end
 end
-
--- เซฟไป DataStore ผ่าน Server
 local function saveSettings()
-    if saveEvent then
-        local ok, encoded = pcall(function() return HttpService:JSONEncode(settings) end)
-        if ok then saveEvent:FireServer(encoded) end
-    end
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(settings) end)
+    if ok then playerGui:SetAttribute("UGHub_Settings", encoded) end
 end
-
 loadSettings()
 settings.sessionStart = os.time()
 
@@ -130,7 +202,6 @@ screenGui.DisplayOrder = 999
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
--- Anti-Tamper
 task.spawn(function()
     while task.wait(5) do
         for _,gui in ipairs(playerGui:GetChildren()) do
@@ -217,23 +288,23 @@ local function addGlow(frame,color)
 end
 
 local function addWatermark(parent, zidx)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1,0,1,0)
-    lbl.Position = UDim2.new(0,0,0,0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = "UG Hub"
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextSize = 18
-    lbl.TextColor3 = Color3.fromRGB(255,255,255)
-    lbl.TextTransparency = 0.82
-    lbl.TextXAlignment = Enum.TextXAlignment.Center
-    lbl.TextYAlignment = Enum.TextYAlignment.Center
-    lbl.ZIndex = zidx or 1
-    lbl.Parent = parent
+    if not CONFIG.WATERMARK_ENABLED then return end
+    local lbl=Instance.new("TextLabel")
+    lbl.Size=UDim2.new(1,0,1,0); lbl.Position=UDim2.new(0,0,0,0)
+    lbl.BackgroundTransparency=1; lbl.Text=CONFIG.HUB_NAME
+    lbl.Font=Enum.Font.GothamBold; lbl.TextSize=18
+    lbl.TextColor3=Color3.fromRGB(255,255,255)
+    lbl.TextTransparency=CONFIG.WATERMARK_TRANSPARENCY
+    lbl.TextXAlignment=Enum.TextXAlignment.Center
+    lbl.TextYAlignment=Enum.TextYAlignment.Center
+    lbl.ZIndex=zidx or 1; lbl.Parent=parent
     return lbl
 end
 
 -- ===== LOGIN SCREEN =====
+local loginGlowColor = Color3.fromRGB(CONFIG.LOGIN_GLOW_COLOR.r, CONFIG.LOGIN_GLOW_COLOR.g, CONFIG.LOGIN_GLOW_COLOR.b)
+local loginTitleColor = Color3.fromRGB(CONFIG.LOGIN_TITLE_COLOR.r, CONFIG.LOGIN_TITLE_COLOR.g, CONFIG.LOGIN_TITLE_COLOR.b)
+
 local loginFrame=Instance.new("Frame")
 loginFrame.Size=UDim2.new(0,280,0,355)
 loginFrame.Position=UDim2.new(0.5,-140,0.5,-177)
@@ -242,7 +313,7 @@ loginFrame.BackgroundTransparency=1
 loginFrame.BorderSizePixel=0; loginFrame.ZIndex=50
 loginFrame.Active=true; loginFrame.Parent=screenGui
 Instance.new("UICorner",loginFrame).CornerRadius=UDim.new(0,14)
-addGlow(loginFrame,Color3.fromRGB(100,200,255))
+addGlow(loginFrame, loginGlowColor)
 tweenFrame(loginFrame,{BackgroundTransparency=0.05},0.4)
 
 local avatarFrame=Instance.new("Frame")
@@ -259,15 +330,17 @@ Instance.new("UICorner",avatarImg).CornerRadius=UDim.new(1,0)
 
 local logoLabel=Instance.new("TextLabel")
 logoLabel.Size=UDim2.new(1,0,0,30); logoLabel.Position=UDim2.new(0,0,0,88)
-logoLabel.BackgroundTransparency=1; logoLabel.Text="🎯 UG Hub"
+logoLabel.BackgroundTransparency=1
+logoLabel.Text="🎯 "..CONFIG.HUB_NAME
 logoLabel.Font=Enum.Font.GothamBold; logoLabel.TextSize=24
-logoLabel.TextColor3=Color3.fromRGB(100,200,255)
+logoLabel.TextColor3=loginTitleColor
 logoLabel.TextXAlignment=Enum.TextXAlignment.Center
 logoLabel.ZIndex=51; logoLabel.Parent=loginFrame
 
 local subLabel=Instance.new("TextLabel")
 subLabel.Size=UDim2.new(1,0,0,18); subLabel.Position=UDim2.new(0,0,0,120)
-subLabel.BackgroundTransparency=1; subLabel.Text="FPS Monitor Ultimate v6.1"
+subLabel.BackgroundTransparency=1
+subLabel.Text="FPS Monitor Ultimate "..CONFIG.VERSION
 subLabel.Font=Enum.Font.Gotham; subLabel.TextSize=11
 subLabel.TextColor3=Color3.fromRGB(150,150,150)
 subLabel.TextXAlignment=Enum.TextXAlignment.Center
@@ -277,7 +350,7 @@ local deviceLabel=Instance.new("TextLabel")
 deviceLabel.Size=UDim2.new(1,-20,0,18); deviceLabel.Position=UDim2.new(0,10,0,140)
 deviceLabel.BackgroundTransparency=1; deviceLabel.Text="📱 "..getDeviceDetail()
 deviceLabel.Font=Enum.Font.Gotham; deviceLabel.TextSize=11
-deviceLabel.TextColor3=Color3.fromRGB(100,200,255)
+deviceLabel.TextColor3=loginTitleColor
 deviceLabel.TextXAlignment=Enum.TextXAlignment.Center
 deviceLabel.ZIndex=51; deviceLabel.Parent=loginFrame
 
@@ -333,7 +406,8 @@ divider2.ZIndex=51; divider2.Parent=loginFrame
 
 local creditLabel=Instance.new("TextLabel")
 creditLabel.Size=UDim2.new(1,0,0,14); creditLabel.Position=UDim2.new(0,0,0,306)
-creditLabel.BackgroundTransparency=1; creditLabel.Text="UG Hub v6.1 | by regretevator638"
+creditLabel.BackgroundTransparency=1
+creditLabel.Text=CONFIG.HUB_NAME.." "..CONFIG.VERSION.." | by "..CONFIG.AUTHOR
 creditLabel.Font=Enum.Font.Gotham; creditLabel.TextSize=10
 creditLabel.TextColor3=Color3.fromRGB(80,80,80)
 creditLabel.TextXAlignment=Enum.TextXAlignment.Center
@@ -341,7 +415,8 @@ creditLabel.ZIndex=51; creditLabel.Parent=loginFrame
 
 local discordLabel=Instance.new("TextLabel")
 discordLabel.Size=UDim2.new(1,0,0,16); discordLabel.Position=UDim2.new(0,0,0,322)
-discordLabel.BackgroundTransparency=1; discordLabel.Text="💬 discord.gg/v6Qh69hqd"
+discordLabel.BackgroundTransparency=1
+discordLabel.Text="💬 "..CONFIG.DISCORD
 discordLabel.Font=Enum.Font.GothamBold; discordLabel.TextSize=11
 discordLabel.TextColor3=Color3.fromRGB(88,101,242)
 discordLabel.TextXAlignment=Enum.TextXAlignment.Center
@@ -362,11 +437,9 @@ mainFrame.BorderSizePixel=0; mainFrame.ClipsDescendants=true
 mainFrame.Active=true; mainFrame.Parent=mainUI
 mainCorner.CornerRadius=UDim.new(0,settings.cornerRadius); mainCorner.Parent=mainFrame
 local mainGlow=addGlow(mainFrame,Color3.fromRGB(80,255,120))
-
--- Watermark บน main frame
+if not settings.glowEnabled then mainGlow.Transparency=1 end
 addWatermark(mainFrame, 1)
 
--- Info Labels
 local fpsLabel    =makeLabel(mainFrame,UDim2.new(0,8,0,3),  UDim2.new(0.5,-10,0,16),13,true,2)
 local pingLabel   =makeLabel(mainFrame,UDim2.new(0,8,0,21), UDim2.new(0.5,-10,0,12),11,false,2)
 local memLabel    =makeLabel(mainFrame,UDim2.new(0.5,2,0,3), UDim2.new(0.5,-36,0,12),11,false,2)
@@ -387,9 +460,9 @@ timeLabel.Text="🕐 0m"; clockLabel.Text="🕰️ --:--"
 healthLabel.Text="❤️ --"; wsLabel.Text="🏃 --"
 gmLabel.Text="🎮 --"; ftLabel.Text="⏱ --ms"
 
-local settingsBtn=makeBtn(mainFrame,UDim2.new(1,-76,0,2),UDim2.new(0,20,0,18),"⚙",Color3.fromRGB(60,60,60),3)
-local minBtn    =makeBtn(mainFrame,UDim2.new(1,-52,0,2),UDim2.new(0,20,0,18),"–",Color3.fromRGB(60,60,60),3)
-local shotBtn   =makeBtn(mainFrame,UDim2.new(1,-28,0,2),UDim2.new(0,20,0,18),"📷",Color3.fromRGB(60,60,60),3)
+local settingsBtn =makeBtn(mainFrame,UDim2.new(1,-76,0,2),UDim2.new(0,20,0,18),"⚙",Color3.fromRGB(60,60,60),3)
+local minBtn      =makeBtn(mainFrame,UDim2.new(1,-52,0,2),UDim2.new(0,20,0,18),"–",Color3.fromRGB(60,60,60),3)
+local shotBtn     =makeBtn(mainFrame,UDim2.new(1,-28,0,2),UDim2.new(0,20,0,18),"📷",Color3.fromRGB(60,60,60),3)
 local lockQuickBtn=makeBtn(mainFrame,UDim2.new(1,-76,0,22),UDim2.new(0,20,0,14),
     settings.locked and "🔒" or "🔓",
     settings.locked and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60),3)
@@ -404,7 +477,6 @@ shotBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible=false; task.delay(3,function() mainFrame.Visible=true end)
 end)
 
--- Graph FPS
 local graphFrame=Instance.new("Frame")
 graphFrame.Size=UDim2.new(1,0,0,20); graphFrame.Position=UDim2.new(0,0,1,-40)
 graphFrame.BackgroundColor3=Color3.fromRGB(15,15,15); graphFrame.BackgroundTransparency=0.5
@@ -419,7 +491,6 @@ for i=1,40 do
     graphBars[i]=bar
 end
 
--- Graph Ping
 local pingGraphFrame=Instance.new("Frame")
 pingGraphFrame.Size=UDim2.new(1,0,0,20); pingGraphFrame.Position=UDim2.new(0,0,1,-20)
 pingGraphFrame.BackgroundColor3=Color3.fromRGB(10,10,30); pingGraphFrame.BackgroundTransparency=0.5
@@ -434,10 +505,7 @@ for i=1,40 do
     pingGraphBars[i]=bar
 end
 
-local fpsHistory={}
-local pingHistory={}
-local fpsLog={}
-
+local fpsHistory,pingHistory,fpsLog={},{},{}
 local function updateGraph(fps,ping)
     table.insert(fpsHistory,fps); table.insert(fpsLog,{t=os.time(),v=fps})
     table.insert(pingHistory,ping or 0)
@@ -497,7 +565,7 @@ UserInputService.InputBegan:Connect(function(inp,gpe)
     elseif inp.KeyCode==Enum.KeyCode.F4 then setMiniMode(not miniMode) end
 end)
 
--- ===== Settings Panel =====
+-- Settings Panel
 local PANEL_W=240
 local panel=Instance.new("Frame")
 panel.Size=UDim2.new(0,PANEL_W,0,300); panel.Position=UDim2.new(0.5,-PANEL_W/2,0.5,-150)
@@ -505,9 +573,7 @@ panel.BackgroundColor3=Color3.fromRGB(18,18,18); panel.BackgroundTransparency=1
 panel.BorderSizePixel=0; panel.Visible=false; panel.ZIndex=20
 panel.ClipsDescendants=true; panel.Active=true; panel.Parent=mainUI
 Instance.new("UICorner",panel).CornerRadius=UDim.new(0,12)
-local panelGlow=addGlow(panel,Color3.fromRGB(100,200,255))
-
--- Watermark บน panel
+local panelGlow=addGlow(panel,loginGlowColor)
 addWatermark(panel, 20)
 
 local function showPanel()
@@ -525,11 +591,10 @@ header.BorderSizePixel=0; header.ZIndex=21; header.Active=true; header.Parent=pa
 Instance.new("UICorner",header).CornerRadius=UDim.new(0,12)
 
 local pTitle=makeLabel(header,UDim2.new(0,10,0,0),UDim2.new(1,-40,1,0),14,true,22)
-pTitle.Text="⚙ UG Hub v6.1"
+pTitle.Text="⚙ "..CONFIG.HUB_NAME.." "..CONFIG.VERSION
 
 local closeBtn=makeBtn(header,UDim2.new(1,-34,0,4),UDim2.new(0,28,0,28),"✕",Color3.fromRGB(200,60,60),22)
 closeBtn.MouseButton1Click:Connect(function() hidePanel() end)
-
 addDrag(panel,nil)
 addResizeHandle(panel,200,260,22,function() saveSettings() end)
 
@@ -609,24 +674,16 @@ local autoBtn
 createSlider(colorPage,"🔴 Red",4,0,255,settings.textColor.r,1,22,function(v) settings.textColor.r=v; settings.autoColor=false; fpsLabel.TextColor3=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b); saveSettings() end)
 createSlider(colorPage,"🟢 Green",44,0,255,settings.textColor.g,1,22,function(v) settings.textColor.g=v; settings.autoColor=false; fpsLabel.TextColor3=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b); saveSettings() end)
 createSlider(colorPage,"🔵 Blue",84,0,255,settings.textColor.b,1,22,function(v) settings.textColor.b=v; settings.autoColor=false; fpsLabel.TextColor3=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b); saveSettings() end)
-createSlider(colorPage,"⬜ BG Opacity",124,0,100,(1-settings.bgTransparency)*100,1,22,function(v)
-    settings.bgTransparency=1-(v/100); mainFrame.BackgroundTransparency=settings.bgTransparency; saveSettings()
-end)
-createSlider(colorPage,"🔵 Corner Radius",164,0,20,settings.cornerRadius,1,22,function(v)
-    settings.cornerRadius=v; mainCorner.CornerRadius=UDim.new(0,v); saveSettings()
-end)
-autoBtn=makeBtn(colorPage,UDim2.new(0,10,0,206),UDim2.new(0.48,0,0,24),
-    "Auto Color: "..(settings.autoColor and "ON" or "OFF"),
-    settings.autoColor and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80),22)
+createSlider(colorPage,"⬜ BG Opacity",124,0,100,(1-settings.bgTransparency)*100,1,22,function(v) settings.bgTransparency=1-(v/100); mainFrame.BackgroundTransparency=settings.bgTransparency; saveSettings() end)
+createSlider(colorPage,"🔵 Corner Radius",164,0,20,settings.cornerRadius,1,22,function(v) settings.cornerRadius=v; mainCorner.CornerRadius=UDim.new(0,v); saveSettings() end)
+autoBtn=makeBtn(colorPage,UDim2.new(0,10,0,206),UDim2.new(0.48,0,0,24),"Auto Color: "..(settings.autoColor and "ON" or "OFF"),settings.autoColor and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80),22)
 autoBtn.TextSize=10
 autoBtn.MouseButton1Click:Connect(function()
     settings.autoColor=not settings.autoColor
     autoBtn.BackgroundColor3=settings.autoColor and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80)
     autoBtn.Text="Auto Color: "..(settings.autoColor and "ON" or "OFF"); saveSettings()
 end)
-local glowBtn=makeBtn(colorPage,UDim2.new(0.5,4,0,206),UDim2.new(0.5,-14,0,24),
-    "✨ Glow: "..(settings.glowEnabled and "ON" or "OFF"),
-    settings.glowEnabled and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80),22)
+local glowBtn=makeBtn(colorPage,UDim2.new(0.5,4,0,206),UDim2.new(0.5,-14,0,24),"✨ Glow: "..(settings.glowEnabled and "ON" or "OFF"),settings.glowEnabled and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80),22)
 glowBtn.TextSize=10
 glowBtn.MouseButton1Click:Connect(function()
     settings.glowEnabled=not settings.glowEnabled
@@ -641,9 +698,7 @@ createSlider(sysPage,"⚡ Update Speed (วิ)",4,0.1,2.0,settings.updateInterv
 createSlider(sysPage,"⚠️ FPS Warn",44,5,60,settings.fpsWarnThreshold,1,22,function(v) settings.fpsWarnThreshold=v; saveSettings() end)
 createSlider(sysPage,"📡 Ping Warn (ms)",84,50,500,settings.pingWarnThreshold,10,22,function(v) settings.pingWarnThreshold=v; saveSettings() end)
 createSlider(sysPage,"🔄 Auto Rejoin FPS",124,0,30,settings.autoRejoinFps,1,22,function(v) settings.autoRejoinFps=v; saveSettings() end)
-local lockBtn=makeBtn(sysPage,UDim2.new(0,10,0,168),UDim2.new(0.48,0,0,24),
-    settings.locked and "🔒 Locked" or "🔓 Unlocked",
-    settings.locked and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60),22)
+local lockBtn=makeBtn(sysPage,UDim2.new(0,10,0,168),UDim2.new(0.48,0,0,24),settings.locked and "🔒 Locked" or "🔓 Unlocked",settings.locked and Color3.fromRGB(200,80,80) or Color3.fromRGB(60,60,60),22)
 lockBtn.TextSize=10
 lockBtn.MouseButton1Click:Connect(function()
     settings.locked=not settings.locked
@@ -664,8 +719,7 @@ local themeNames={"Dark","Neon","Minimal","Sad","Sunset","Matrix","Sakura","Cybe
 local themeBtns={}
 for i,name in ipairs(themeNames) do
     local col=(i-1)%2; local row=math.floor((i-1)/2)
-    local tb=makeBtn(themePage,UDim2.new(col*0.5,col==0 and 8 or 4,0,4+row*28),UDim2.new(0.5,-12,0,22),name,
-        settings.theme==name and Color3.fromRGB(60,180,100) or Color3.fromRGB(50,50,50),22)
+    local tb=makeBtn(themePage,UDim2.new(col*0.5,col==0 and 8 or 4,0,4+row*28),UDim2.new(0.5,-12,0,22),name,settings.theme==name and Color3.fromRGB(60,180,100) or Color3.fromRGB(50,50,50),22)
     tb.TextSize=11; themeBtns[name]=tb
     tb.MouseButton1Click:Connect(function()
         settings.theme=name
@@ -697,8 +751,7 @@ saveNameBox.Parent=savesPage
 Instance.new("UICorner",saveNameBox).CornerRadius=UDim.new(0,6)
 
 local saveStatusLbl=makeLabel(savesPage,UDim2.new(0,8,1,-30),UDim2.new(1,-16,0,22),10,false,22)
-saveStatusLbl.Text=""; saveStatusLbl.TextXAlignment=Enum.TextXAlignment.Center
-saveStatusLbl.TextColor3=Color3.fromRGB(80,255,120)
+saveStatusLbl.Text=""; saveStatusLbl.TextXAlignment=Enum.TextXAlignment.Center; saveStatusLbl.TextColor3=Color3.fromRGB(80,255,120)
 
 local refreshSavesList
 local doSaveBtn=makeBtn(savesPage,UDim2.new(1,-66,1,-62),UDim2.new(0,58,0,26),"💾 Save",Color3.fromRGB(40,130,60),22)
@@ -706,18 +759,9 @@ doSaveBtn.TextSize=10
 doSaveBtn.MouseButton1Click:Connect(function()
     local name=saveNameBox.Text:gsub("%s+","")
     if name=="" then name="Save "..tostring(#settings.saves+1) end
-    table.insert(settings.saves,{
-        name=name,
-        textColor={r=settings.textColor.r,g=settings.textColor.g,b=settings.textColor.b},
-        bgTransparency=settings.bgTransparency,
-        autoColor=settings.autoColor,
-        theme=settings.theme,
-        glowEnabled=settings.glowEnabled,
-        cornerRadius=settings.cornerRadius,
-    })
+    table.insert(settings.saves,{name=name,textColor={r=settings.textColor.r,g=settings.textColor.g,b=settings.textColor.b},bgTransparency=settings.bgTransparency,autoColor=settings.autoColor,theme=settings.theme,glowEnabled=settings.glowEnabled,cornerRadius=settings.cornerRadius})
     saveNameBox.Text=""; saveSettings(); refreshSavesList()
-    saveStatusLbl.Text="✅ บันทึก '"..name.."' แล้ว!"; saveStatusLbl.TextColor3=Color3.fromRGB(80,255,120)
-    task.delay(2,function() saveStatusLbl.Text="" end)
+    saveStatusLbl.Text="✅ บันทึก '"..name.."' แล้ว!"; task.delay(2,function() saveStatusLbl.Text="" end)
 end)
 
 refreshSavesList=function()
@@ -748,15 +792,13 @@ refreshSavesList=function()
             glowBtn.BackgroundColor3=settings.glowEnabled and Color3.fromRGB(60,180,100) or Color3.fromRGB(80,80,80)
             for n,b in pairs(themeBtns) do b.BackgroundColor3=n==settings.theme and Color3.fromRGB(60,180,100) or Color3.fromRGB(50,50,50) end
             saveSettings()
-            saveStatusLbl.Text="✅ โหลด '"..sv.name.."' แล้ว!"
-            task.delay(2,function() saveStatusLbl.Text="" end)
+            saveStatusLbl.Text="✅ โหลด '"..sv.name.."' แล้ว!"; task.delay(2,function() saveStatusLbl.Text="" end)
         end)
         local delB=makeBtn(row,UDim2.new(1,-48,0,4),UDim2.new(0,40,0,22),"🗑️",Color3.fromRGB(150,40,40),23)
         delB.TextSize=10
         delB.MouseButton1Click:Connect(function()
             local n=sv.name; table.remove(settings.saves,i); saveSettings(); refreshSavesList()
-            saveStatusLbl.Text="🗑️ ลบ '"..n.."' แล้ว"
-            task.delay(2,function() saveStatusLbl.Text="" end)
+            saveStatusLbl.Text="🗑️ ลบ '"..n.."' แล้ว"; task.delay(2,function() saveStatusLbl.Text="" end)
         end)
     end
     savesScroll.CanvasSize=UDim2.new(0,0,0,#settings.saves*33)
@@ -765,19 +807,11 @@ refreshSavesList()
 
 -- Tab 5: Toggle
 local togglePage=tabPages[5]
-local toggleItems={
-    {"showFps","FPS"},{"showPing","Ping"},{"showMem","Memory"},
-    {"showSrv","Server FPS"},{"showNet","Network"},{"showPlayers","Players"},
-    {"showTime","Session Time"},{"showClock","Clock"},
-    {"showHealth","Health"},{"showWalkspeed","Walkspeed"},
-    {"showGameMode","Game Mode"},{"showFrameTime","Frame Time"},
-}
+local toggleItems={{"showFps","FPS"},{"showPing","Ping"},{"showMem","Memory"},{"showSrv","Server FPS"},{"showNet","Network"},{"showPlayers","Players"},{"showTime","Session Time"},{"showClock","Clock"},{"showHealth","Health"},{"showWalkspeed","Walkspeed"},{"showGameMode","Game Mode"},{"showFrameTime","Frame Time"}}
 for i,item in ipairs(toggleItems) do
     local key,name=item[1],item[2]
     local col=(i-1)%2; local row=math.floor((i-1)/2)
-    local tb=makeBtn(togglePage,UDim2.new(col*0.5,col==0 and 8 or 4,0,4+row*28),UDim2.new(0.5,-12,0,22),
-        (settings[key] and "✅ " or "❌ ")..name,
-        settings[key] and Color3.fromRGB(40,100,40) or Color3.fromRGB(80,40,40),22)
+    local tb=makeBtn(togglePage,UDim2.new(col*0.5,col==0 and 8 or 4,0,4+row*28),UDim2.new(0.5,-12,0,22),(settings[key] and "✅ " or "❌ ")..name,settings[key] and Color3.fromRGB(40,100,40) or Color3.fromRGB(80,40,40),22)
     tb.TextSize=10
     tb.MouseButton1Click:Connect(function()
         settings[key]=not settings[key]
@@ -791,15 +825,14 @@ end
 local infoPage=tabPages[6]
 local vp=workspace.CurrentCamera.ViewportSize
 local infoData={
-    {"👤 User", player.Name},
-    {"📱 Device", getDeviceDetail()},
+    {"👤 User", player.Name},{"📱 Device", getDeviceDetail()},
     {"📐 Resolution", math.round(vp.X).."x"..math.round(vp.Y)},
-    {"🎮 Place", tostring(game.PlaceId)},
-    {"📦 Version", tostring(game.PlaceVersion)},
+    {"🎮 Place", tostring(game.PlaceId)},{"📦 Version", tostring(game.PlaceVersion)},
     {"🌐 Server", game.JobId~="" and game.JobId:sub(1,8).."..." or "Studio"},
     {"👥 Players", tostring(#Players:GetPlayers()).."/"..tostring(game.Players.MaxPlayers)},
     {"⭐ VIP", game.VIPServerId~="" and "Yes ✅" or "No ❌"},
-    {"💬 Discord", "discord.gg/v6Qh69hqd"},
+    {"💬 Discord", CONFIG.DISCORD},
+    {"🔧 Hub", CONFIG.HUB_NAME.." "..CONFIG.VERSION},
 }
 for i,info in ipairs(infoData) do
     local row=Instance.new("Frame")
@@ -808,8 +841,7 @@ for i,info in ipairs(infoData) do
     row.BorderSizePixel=0; row.ZIndex=22; row.Parent=infoPage
     Instance.new("UICorner",row).CornerRadius=UDim.new(0,5)
     local kl=makeLabel(row,UDim2.new(0,6,0,0),UDim2.new(0.5,0,1,0),10,true,23); kl.Text=info[1]; kl.TextColor3=Color3.fromRGB(180,180,180)
-    local vll=makeLabel(row,UDim2.new(0.5,0,0,0),UDim2.new(0.5,-6,1,0),10,false,23); vll.Text=info[2]
-    vll.TextXAlignment=Enum.TextXAlignment.Right
+    local vll=makeLabel(row,UDim2.new(0.5,0,0,0),UDim2.new(0.5,-6,1,0),10,false,23); vll.Text=info[2]; vll.TextXAlignment=Enum.TextXAlignment.Right
     vll.TextColor3=info[1]=="💬 Discord" and Color3.fromRGB(88,101,242) or Color3.fromRGB(100,200,255)
 end
 
@@ -820,17 +852,14 @@ logScroll.Size=UDim2.new(1,-8,1,-60); logScroll.Position=UDim2.new(0,4,0,4)
 logScroll.BackgroundTransparency=1; logScroll.BorderSizePixel=0
 logScroll.ScrollBarThickness=4; logScroll.ZIndex=22; logScroll.Active=true; logScroll.Parent=logPage
 Instance.new("UIListLayout",logScroll).SortOrder=Enum.SortOrder.LayoutOrder
-
 local clearLogBtn=makeBtn(logPage,UDim2.new(0,8,1,-54),UDim2.new(0.5,-12,0,22),"🗑️ Clear",Color3.fromRGB(150,50,50),22)
 clearLogBtn.TextSize=10
 clearLogBtn.MouseButton1Click:Connect(function()
     for _,c in ipairs(logScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
     table.clear(fpsLog)
 end)
-
 local exportBtn=makeBtn(logPage,UDim2.new(0.5,4,1,-54),UDim2.new(0.5,-12,0,22),"📋 Export",Color3.fromRGB(60,100,160),22)
 exportBtn.TextSize=10
-
 local exportBox=Instance.new("TextBox")
 exportBox.Size=UDim2.new(1,-16,0,24); exportBox.Position=UDim2.new(0,8,1,-28)
 exportBox.BackgroundColor3=Color3.fromRGB(20,20,20); exportBox.BorderSizePixel=0
@@ -838,15 +867,11 @@ exportBox.Text="กด Export แล้วก็อปตรงนี้"; expor
 exportBox.TextColor3=Color3.fromRGB(180,180,180); exportBox.ZIndex=22; exportBox.Active=true
 exportBox.ClearTextOnFocus=false; exportBox.Parent=logPage
 Instance.new("UICorner",exportBox).CornerRadius=UDim.new(0,4)
-
 exportBtn.MouseButton1Click:Connect(function()
     local lines={}
-    for _,entry in ipairs(fpsLog) do
-        table.insert(lines, os.date("%H:%M:%S",entry.t)..": "..entry.v.." FPS")
-    end
+    for _,entry in ipairs(fpsLog) do table.insert(lines, os.date("%H:%M:%S",entry.t)..": "..entry.v.." FPS") end
     exportBox.Text=table.concat(lines,", ")
 end)
-
 local function updateLogDisplay()
     for _,c in ipairs(logScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
     local count=0
@@ -863,21 +888,19 @@ local function updateLogDisplay()
     logScroll.CanvasSize=UDim2.new(0,0,0,count*16)
 end
 
--- Tab 8: Notif History
+-- Tab 8: Notif
 local notifPage=tabPages[8]
 local notifScroll=Instance.new("ScrollingFrame")
 notifScroll.Size=UDim2.new(1,-8,1,-36); notifScroll.Position=UDim2.new(0,4,0,4)
 notifScroll.BackgroundTransparency=1; notifScroll.BorderSizePixel=0
 notifScroll.ScrollBarThickness=4; notifScroll.ZIndex=22; notifScroll.Active=true; notifScroll.Parent=notifPage
 Instance.new("UIListLayout",notifScroll).SortOrder=Enum.SortOrder.LayoutOrder
-
 local clearNotifBtn=makeBtn(notifPage,UDim2.new(0,8,1,-30),UDim2.new(1,-16,0,22),"🗑️ Clear Notifications",Color3.fromRGB(150,50,50),22)
 clearNotifBtn.TextSize=10
 clearNotifBtn.MouseButton1Click:Connect(function()
     for _,c in ipairs(notifScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
     table.clear(notifHistory)
 end)
-
 local function updateNotifDisplay()
     for _,c in ipairs(notifScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
     local count=0
@@ -887,16 +910,14 @@ local function updateNotifDisplay()
         lbl.Size=UDim2.new(1,0,0,16); lbl.BackgroundTransparency=count%2==0 and 0.8 or 1
         lbl.BackgroundColor3=Color3.fromRGB(30,30,30); lbl.Font=Enum.Font.Gotham; lbl.TextSize=9
         lbl.Text=os.date("%H:%M:%S",entry.t).." "..entry.msg
-        lbl.TextColor3=entry.color
-        lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.ZIndex=23; lbl.LayoutOrder=count; lbl.Parent=notifScroll
+        lbl.TextColor3=entry.color; lbl.TextXAlignment=Enum.TextXAlignment.Left
+        lbl.ZIndex=23; lbl.LayoutOrder=count; lbl.Parent=notifScroll
         count+=1
     end
     notifScroll.CanvasSize=UDim2.new(0,0,0,count*16)
 end
 
-settingsBtn.MouseButton1Click:Connect(function()
-    if panel.Visible then hidePanel() else showPanel() end
-end)
+settingsBtn.MouseButton1Click:Connect(function() if panel.Visible then hidePanel() else showPanel() end end)
 tabBtns[7].MouseButton1Click:Connect(function() updateLogDisplay() end)
 tabBtns[8].MouseButton1Click:Connect(function() updateNotifDisplay() end)
 tabBtns[4].MouseButton1Click:Connect(function() refreshSavesList() end)
@@ -909,7 +930,7 @@ warnFrame.BorderSizePixel=0; warnFrame.Visible=false; warnFrame.ZIndex=30
 warnFrame.Active=true; warnFrame.Parent=mainUI
 Instance.new("UICorner",warnFrame).CornerRadius=UDim.new(0,8)
 local warnLabel=makeLabel(warnFrame,UDim2.new(0,0,0,0),UDim2.new(1,0,1,0),11,true,31)
-warnLabel.Text="⚠️ FPS ต่ำมาก!"; warnLabel.TextColor3=Color3.fromRGB(255,255,255); warnLabel.TextXAlignment=Enum.TextXAlignment.Center
+warnLabel.Text="⚠️"; warnLabel.TextColor3=Color3.fromRGB(255,255,255); warnLabel.TextXAlignment=Enum.TextXAlignment.Center
 
 local pingWarnFrame=Instance.new("Frame")
 pingWarnFrame.Size=UDim2.new(0,220,0,32); pingWarnFrame.Position=UDim2.new(0.5,-110,0,88)
@@ -936,11 +957,11 @@ local function showPingWarning(ping)
     task.delay(3,function() pingWarnFrame.Visible=false; task.delay(10,function() pingWarnCooldown=false end) end)
 end
 
--- Login Logic
+-- Login
 local function checkLogin(username)
     username=username:gsub("%s+","")
     if username=="" then return false,"⚠️ กรุณาใส่ชื่อก่อน" end
-    for _,w in ipairs(WHITELIST) do
+    for _,w in ipairs(CONFIG.WHITELIST) do
         if username:lower()==w:lower() then return true,"✅ เข้าใช้งานสำเร็จ!" end
     end
     local ok,userId=pcall(function() return Players:GetUserIdFromNameAsync(username) end)
@@ -960,17 +981,13 @@ loginBtn.MouseButton1Click:Connect(function()
         else
             statusLabel.TextColor3=Color3.fromRGB(255,80,80)
             tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(40,10,10)},0.1)
-            task.delay(0.4,function()
-                tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(12,12,12)},0.2)
-                loginBtn.Active=true
-            end)
+            task.delay(0.4,function() tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(12,12,12)},0.2); loginBtn.Active=true end)
         end
     end)
 end)
 
 -- FPS Loop
-local frameCount,elapsed=0,0
-local lastFrameTime=0
+local frameCount,elapsed,lastFrameTime=0,0,0
 local autoRejoinCooldown=false
 
 RunService.RenderStepped:Connect(function(dt)
@@ -978,6 +995,7 @@ RunService.RenderStepped:Connect(function(dt)
     if elapsed>=settings.updateInterval then
         local fps=math.round(frameCount/elapsed)
         frameCount=0; elapsed=0
+        local currentPing=0
 
         local fpsColor
         if settings.autoColor then
@@ -985,8 +1003,6 @@ RunService.RenderStepped:Connect(function(dt)
         else
             fpsColor=Color3.fromRGB(settings.textColor.r,settings.textColor.g,settings.textColor.b)
         end
-
-        local currentPing=0
 
         if settings.showFps then fpsLabel.TextColor3=fpsColor; fpsLabel.Text="FPS: "..fps; fpsLabel.Visible=true else fpsLabel.Visible=false end
         miniFpsLabel.TextColor3=fpsColor; miniFpsLabel.Text="FPS: "..fps
@@ -1026,19 +1042,13 @@ RunService.RenderStepped:Connect(function(dt)
         if char then
             local hum=char:FindFirstChildOfClass("Humanoid")
             if hum then
-                if settings.showHealth then
-                    healthLabel.Text="❤️ "..math.round(hum.Health).."/"..math.round(hum.MaxHealth); healthLabel.Visible=true
-                else healthLabel.Visible=false end
+                if settings.showHealth then healthLabel.Text="❤️ "..math.round(hum.Health).."/"..math.round(hum.MaxHealth); healthLabel.Visible=true else healthLabel.Visible=false end
                 if settings.showWalkspeed then wsLabel.Text="🏃 "..math.round(hum.WalkSpeed); wsLabel.Visible=true else wsLabel.Visible=false end
-                if settings.showGameMode then
-                    gmLabel.Text=hum.Health>0 and "🎮 Playing" or "👁️ Spectating"; gmLabel.Visible=true
-                else gmLabel.Visible=false end
+                if settings.showGameMode then gmLabel.Text=hum.Health>0 and "🎮 Playing" or "👁️ Spectating"; gmLabel.Visible=true else gmLabel.Visible=false end
             end
         end
 
-        if settings.showFrameTime then
-            ftLabel.Text="⏱ "..math.round(lastFrameTime*10)/10 .."ms"; ftLabel.Visible=true
-        else ftLabel.Visible=false end
+        if settings.showFrameTime then ftLabel.Text="⏱ "..math.round(lastFrameTime*10)/10 .."ms"; ftLabel.Visible=true else ftLabel.Visible=false end
 
         updateGraph(fps, currentPing)
         if fps<settings.fpsWarnThreshold then showWarning("⚠️ FPS ต่ำมาก! ("..fps..")", Color3.fromRGB(255,80,80)) end
