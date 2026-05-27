@@ -40,13 +40,13 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
-        -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
+        "RWGXLX",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        -- "goyoeogi",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
     -- [ Whitelist — ใครบ้างที่เข้าได้นอกจากตัวเอง ]
     WHITELIST = {
-        -- "A",
+        -- "username1",
         -- "username2",
     },
 
@@ -200,6 +200,9 @@ local function saveSettings()
 end
 loadSettings()
 settings.sessionStart = os.time()
+
+-- ตัวแปรบอกว่าเป็น Dev หรือเปล่า
+local isDev = false
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UGHub"
@@ -609,13 +612,13 @@ tabBar.Size=UDim2.new(1,0,0,32); tabBar.Position=UDim2.new(0,0,0,36)
 tabBar.BackgroundColor3=Color3.fromRGB(25,25,25)
 tabBar.BorderSizePixel=0; tabBar.ZIndex=21; tabBar.Active=true; tabBar.Parent=panel
 
-local tabNames={"🎨","⚙️","🎭","💾","👁️","👤","📊","🔔"}
-local tabLabels={"Color","System","Theme","Saves","Toggle","Info","Log","Notif"}
+local tabNames={"🎨","⚙️","🎭","💾","👁️","👤","📊","🔔","🔧"}
+local tabLabels={"Color","System","Theme","Saves","Toggle","Info","Log","Notif","Dev"}
 local tabPages={}
 local tabBtns={}
 
 for i,icon in ipairs(tabNames) do
-    local tb=makeBtn(tabBar,UDim2.new((i-1)/8,1,0,2),UDim2.new(1/8,-2,1,-4),icon,Color3.fromRGB(40,40,40),22)
+    local tb=makeBtn(tabBar,UDim2.new((i-1)/9,1,0,2),UDim2.new(1/9,-2,1,-4),icon,Color3.fromRGB(40,40,40),22)
     tb.TextSize=12; tabBtns[i]=tb
     local tl=makeLabel(tb,UDim2.new(0,0,0.5,2),UDim2.new(1,0,0,8),6,false,23)
     tl.Text=tabLabels[i]; tl.TextXAlignment=Enum.TextXAlignment.Center; tl.TextColor3=Color3.fromRGB(180,180,180)
@@ -923,10 +926,65 @@ local function updateNotifDisplay()
     notifScroll.CanvasSize=UDim2.new(0,0,0,count*16)
 end
 
-settingsBtn.MouseButton1Click:Connect(function() if panel.Visible then hidePanel() else showPanel() end end)
+settingsBtn.MouseButton1Click:Connect(function()
+    if panel.Visible then hidePanel() else
+        if tabBtns[9] then tabBtns[9].Visible=isDev end
+        showPanel()
+    end
+end)
 tabBtns[7].MouseButton1Click:Connect(function() updateLogDisplay() end)
 tabBtns[8].MouseButton1Click:Connect(function() updateNotifDisplay() end)
 tabBtns[4].MouseButton1Click:Connect(function() refreshSavesList() end)
+
+-- ===== Dev Tools Tab =====
+local devPage=tabPages[9]
+if tabBtns[9] then tabBtns[9].Visible=false end
+
+local debugTitle=makeLabel(devPage,UDim2.new(0,10,0,4),UDim2.new(1,-20,0,16),12,true,22)
+debugTitle.Text="🔧 Developer Tools"; debugTitle.TextColor3=Color3.fromRGB(255,210,0)
+
+local debugLabels={}
+local debugItems={"UserId","PlaceId","JobId","PlaceVersion","MaxPlayers","ServerFPS","MemoryUsed"}
+for i,name in ipairs(debugItems) do
+    local row=Instance.new("Frame")
+    row.Size=UDim2.new(1,-16,0,22); row.Position=UDim2.new(0,8,0,22+(i-1)*25)
+    row.BackgroundColor3=Color3.fromRGB(30,25,0); row.BackgroundTransparency=0.3
+    row.BorderSizePixel=0; row.ZIndex=22; row.Parent=devPage
+    Instance.new("UICorner",row).CornerRadius=UDim.new(0,5)
+    local kl=makeLabel(row,UDim2.new(0,6,0,0),UDim2.new(0.5,0,1,0),10,true,23)
+    kl.Text=name; kl.TextColor3=Color3.fromRGB(255,180,0)
+    local vl=makeLabel(row,UDim2.new(0.5,0,0,0),UDim2.new(0.5,-6,1,0),10,false,23)
+    vl.TextXAlignment=Enum.TextXAlignment.Right; vl.TextColor3=Color3.fromRGB(255,255,255)
+    debugLabels[name]=vl
+end
+
+local forceRejoinBtn=makeBtn(devPage,UDim2.new(0,8,1,-60),UDim2.new(1,-16,0,24),"⚡ Force Rejoin (Dev)",Color3.fromRGB(200,100,0),22)
+forceRejoinBtn.TextSize=11
+forceRejoinBtn.MouseButton1Click:Connect(function() TeleportService:Teleport(game.PlaceId,player) end)
+
+local resetBtn=makeBtn(devPage,UDim2.new(0,8,1,-32),UDim2.new(1,-16,0,24),"🗑️ Reset All Settings",Color3.fromRGB(180,30,30),22)
+resetBtn.TextSize=11
+resetBtn.MouseButton1Click:Connect(function()
+    playerGui:SetAttribute("UGHub_Settings",nil)
+    resetBtn.Text="✅ รีเซ็ตแล้ว! รีสตาร์ทเกม"
+    task.delay(2,function() resetBtn.Text="🗑️ Reset All Settings" end)
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if isDev and panel.Visible and devPage.Visible then
+            if debugLabels["UserId"] then debugLabels["UserId"].Text=tostring(player.UserId) end
+            if debugLabels["PlaceId"] then debugLabels["PlaceId"].Text=tostring(game.PlaceId) end
+            if debugLabels["JobId"] then debugLabels["JobId"].Text=game.JobId~="" and game.JobId:sub(1,12).."..." or "Studio" end
+            if debugLabels["PlaceVersion"] then debugLabels["PlaceVersion"].Text=tostring(game.PlaceVersion) end
+            if debugLabels["MaxPlayers"] then debugLabels["MaxPlayers"].Text=tostring(game.Players.MaxPlayers) end
+            local ok,srvFps=pcall(function() return math.round(Stats.Network.ServerStatsItem["Server FPS"]:GetValue()) end)
+            if debugLabels["ServerFPS"] then debugLabels["ServerFPS"].Text=ok and srvFps.."fps" or "--" end
+            local ok2,mem=pcall(function() return math.round(Stats:GetTotalMemoryUsageMb()) end)
+            if debugLabels["MemoryUsed"] then debugLabels["MemoryUsed"].Text=ok2 and mem.."MB" or "--" end
+        end
+    end
+end)
 
 -- Warning
 local warnFrame=Instance.new("Frame")
@@ -966,35 +1024,66 @@ end
 -- Login
 local function checkLogin(username)
     username=username:gsub("%s+","")
-    if username=="" then return false,"⚠️ กรุณาใส่ชื่อก่อน" end
+    if username=="" then return false,"⚠️ กรุณาใส่ชื่อก่อน",false end
 
     -- ตรวจ Dev Accounts ก่อนเลย เร็วที่สุด ไม่ต้องรอ API
     for _,dev in ipairs(CONFIG.DEV_ACCOUNTS) do
         if username:lower()==dev:lower() then
-            return true,"👑 Developer Account ยินดีต้อนรับ!"
+            return true,"👑 Developer Account ยินดีต้อนรับ!",true
         end
     end
 
     -- ตรวจ Whitelist
     for _,w in ipairs(CONFIG.WHITELIST) do
-        if username:lower()==w:lower() then return true,"✅ เข้าใช้งานสำเร็จ!" end
+        if username:lower()==w:lower() then return true,"✅ เข้าใช้งานสำเร็จ!",false end
     end
 
     -- ตรวจ Roblox API ปกติ
     local ok,userId=pcall(function() return Players:GetUserIdFromNameAsync(username) end)
-    if not ok then return false,"❌ ไม่พบ Username นี้ใน Roblox" end
-    if userId~=player.UserId then return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อยู่" end
-    return true,"✅ ยืนยันตัวตนสำเร็จ!"
+    if not ok then return false,"❌ ไม่พบ Username นี้ใน Roblox",false end
+    if userId~=player.UserId then return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อยู่",false end
+    return true,"✅ ยืนยันตัวตนสำเร็จ!",false
 end
 
 loginBtn.MouseButton1Click:Connect(function()
     statusLabel.Text="🔄 กำลังตรวจสอบ..."; statusLabel.TextColor3=Color3.fromRGB(255,210,50); loginBtn.Active=false
     task.spawn(function()
-        local success,msg=checkLogin(inputBox.Text); statusLabel.Text=msg
+        local success,msg,devMode=checkLogin(inputBox.Text); statusLabel.Text=msg
         if success then
-            statusLabel.TextColor3=Color3.fromRGB(80,255,120)
-            tweenFrame(loginFrame,{BackgroundTransparency=1},0.3)
-            task.delay(1,function() loginFrame.Visible=false; mainUI.Visible=true end)
+            isDev=devMode
+            if isDev then
+                -- Animation พิเศษสำหรับ Dev
+                statusLabel.TextColor3=Color3.fromRGB(255,210,0)
+                tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(30,25,0)},0.2)
+                task.delay(0.3,function()
+                    tweenFrame(loginFrame,{BackgroundTransparency=1},0.4)
+                end)
+                task.delay(1,function()
+                    loginFrame.Visible=false
+                    mainUI.Visible=true
+                    -- ใส่ขอบสีทองสำหรับ Dev
+                    mainGlow.Color=Color3.fromRGB(255,210,0)
+                    mainGlow.Thickness=2
+                    mainGlow.Transparency=0.1
+                    -- ป้าย DEV ติดมุม
+                    local devBadge=Instance.new("TextLabel")
+                    devBadge.Size=UDim2.new(0,36,0,14)
+                    devBadge.Position=UDim2.new(0,0,0,22)
+                    devBadge.BackgroundColor3=Color3.fromRGB(255,180,0)
+                    devBadge.BorderSizePixel=0
+                    devBadge.Text="👑 DEV"
+                    devBadge.Font=Enum.Font.GothamBold
+                    devBadge.TextSize=8
+                    devBadge.TextColor3=Color3.fromRGB(0,0,0)
+                    devBadge.ZIndex=4
+                    devBadge.Parent=mainFrame
+                    Instance.new("UICorner",devBadge).CornerRadius=UDim.new(0,4)
+                end)
+            else
+                statusLabel.TextColor3=Color3.fromRGB(80,255,120)
+                tweenFrame(loginFrame,{BackgroundTransparency=1},0.3)
+                task.delay(1,function() loginFrame.Visible=false; mainUI.Visible=true end)
+            end
         else
             statusLabel.TextColor3=Color3.fromRGB(255,80,80)
             tweenFrame(loginFrame,{BackgroundColor3=Color3.fromRGB(40,10,10)},0.1)
