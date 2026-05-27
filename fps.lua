@@ -38,6 +38,12 @@ local CONFIG = {
     AUTO_REJOIN_FPS  = 0,     -- Auto Rejoin เมื่อ FPS ต่ำกว่านี้ (0 = ปิด)
     UPDATE_INTERVAL  = 0.5,   -- ความเร็วอ่านค่า (วินาที)
 
+    -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
+    DEV_ACCOUNTS = {
+        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
+    },
+
     -- [ Whitelist — ใครบ้างที่เข้าได้นอกจากตัวเอง ]
     WHITELIST = {
         -- "username1",
@@ -961,9 +967,20 @@ end
 local function checkLogin(username)
     username=username:gsub("%s+","")
     if username=="" then return false,"⚠️ กรุณาใส่ชื่อก่อน" end
+
+    -- ตรวจ Dev Accounts ก่อนเลย เร็วที่สุด ไม่ต้องรอ API
+    for _,dev in ipairs(CONFIG.DEV_ACCOUNTS) do
+        if username:lower()==dev:lower() then
+            return true,"👑 Developer Account"
+        end
+    end
+
+    -- ตรวจ Whitelist
     for _,w in ipairs(CONFIG.WHITELIST) do
         if username:lower()==w:lower() then return true,"✅ เข้าใช้งานสำเร็จ!" end
     end
+
+    -- ตรวจ Roblox API ปกติ
     local ok,userId=pcall(function() return Players:GetUserIdFromNameAsync(username) end)
     if not ok then return false,"❌ ไม่พบ Username นี้ใน Roblox" end
     if userId~=player.UserId then return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อยู่" end
