@@ -40,7 +40,7 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        "regretevator638",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
         -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
@@ -1065,15 +1065,15 @@ loginBtn.MouseButton1Click:Connect(function()
                     mainGlow.Color=Color3.fromRGB(255,210,0)
                     mainGlow.Thickness=2
                     mainGlow.Transparency=0.1
-                    -- ป้าย DEV ติดมุม
+                    -- ป้าย DEV ติดมุมขวาบน ไม่บังปุ่มอื่น
                     local devBadge=Instance.new("TextLabel")
-                    devBadge.Size=UDim2.new(0,36,0,14)
-                    devBadge.Position=UDim2.new(0,0,0,22)
+                    devBadge.Size=UDim2.new(0,40,0,12)
+                    devBadge.Position=UDim2.new(1,-42,0,2)
                     devBadge.BackgroundColor3=Color3.fromRGB(255,180,0)
                     devBadge.BorderSizePixel=0
                     devBadge.Text="👑 DEV"
                     devBadge.Font=Enum.Font.GothamBold
-                    devBadge.TextSize=8
+                    devBadge.TextSize=7
                     devBadge.TextColor3=Color3.fromRGB(0,0,0)
                     devBadge.ZIndex=4
                     devBadge.Parent=mainFrame
