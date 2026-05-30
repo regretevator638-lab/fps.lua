@@ -16,7 +16,7 @@ local CONFIG = {
 
     -- [ ข้อมูลทั่วไป ]
     HUB_NAME    = "UG Hub",               -- ชื่อโปรแกรม
-    VERSION     = "v6.2",                 -- เวอร์ชั่น
+    VERSION     = "v6.3",                 -- เวอร์ชั่น
     AUTHOR      = "regretevator638",       -- ชื่อผู้สร้าง
     DISCORD     = "discord.gg/v6Qh69hqd", -- ลิงค์ Discord
 
@@ -40,7 +40,7 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        "regretevator638",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
         -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
@@ -721,6 +721,42 @@ local miniModeBtn=makeBtn(sysPage,UDim2.new(0.5,4,0,168),UDim2.new(0.5,-14,0,24)
 miniModeBtn.TextSize=10; miniModeBtn.MouseButton1Click:Connect(function() setMiniMode(not miniMode) end)
 local rejoinSysBtn=makeBtn(sysPage,UDim2.new(0,10,0,198),UDim2.new(1,-20,0,24),"🔄 Rejoin Game",Color3.fromRGB(40,100,200),22)
 rejoinSysBtn.TextSize=10; rejoinSysBtn.MouseButton1Click:Connect(function() TeleportService:Teleport(game.PlaceId,player) end)
+
+-- FPS Cap
+local fpsCapLabel=makeLabel(sysPage,UDim2.new(0,10,0,228),UDim2.new(1,0,0,16),11,true,22)
+fpsCapLabel.Text="🎯 FPS Cap"
+fpsCapLabel.TextColor3=Color3.fromRGB(200,200,200)
+
+local fpsCaps={10,15,30,45,60,144,9999}
+local fpsCapBtns={}
+local currentCapBtn=nil
+
+for i,cap in ipairs(fpsCaps) do
+    local col=(i-1)%4; local row=math.floor((i-1)/4)
+    local label=cap==9999 and "MAX" or tostring(cap)
+    local btn=makeBtn(sysPage,UDim2.new(col/4,col==0 and 10 or 4,0,248+row*30),UDim2.new(1/4,-8,0,24),label,Color3.fromRGB(50,50,50),22)
+    btn.TextSize=11
+    fpsCapBtns[i]=btn
+    btn.MouseButton1Click:Connect(function()
+        -- เปลี่ยนสีปุ่มที่เลือก
+        for _,b in ipairs(fpsCapBtns) do b.BackgroundColor3=Color3.fromRGB(50,50,50) end
+        btn.BackgroundColor3=Color3.fromRGB(60,180,100)
+        currentCapBtn=btn
+        -- ตั้ง FPS Cap
+        local ok=pcall(function()
+            if cap==9999 then
+                setfpscap(0) -- 0 = ไม่จำกัด
+            else
+                setfpscap(cap)
+            end
+        end)
+        if not ok then
+            -- ถ้าใช้ใน Studio จะ error เพราะไม่มี setfpscap
+            btn.Text=(cap==9999 and "MAX" or tostring(cap)).." ⚠️"
+            task.delay(1.5,function() btn.Text=cap==9999 and "MAX" or tostring(cap) end)
+        end
+    end)
+end
 
 -- Tab 3: Theme
 local themePage=tabPages[3]
