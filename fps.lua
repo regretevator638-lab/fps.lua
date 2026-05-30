@@ -40,7 +40,7 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "regretevator638",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
         -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
