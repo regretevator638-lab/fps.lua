@@ -16,7 +16,7 @@ local CONFIG = {
 
     -- [ ข้อมูลทั่วไป ]
     HUB_NAME    = "UG Hub",               -- ชื่อโปรแกรม
-    VERSION     = "v6.3",                 -- เวอร์ชั่น
+    VERSION     = "v6.5",                 -- เวอร์ชั่น
     AUTHOR      = "regretevator638",       -- ชื่อผู้สร้าง
     DISCORD     = "discord.gg/v6Qh69hqd", -- ลิงค์ Discord
 
@@ -575,9 +575,9 @@ UserInputService.InputBegan:Connect(function(inp,gpe)
 end)
 
 -- Settings Panel
-local PANEL_W=240
+local PANEL_W=360
 local panel=Instance.new("Frame")
-panel.Size=UDim2.new(0,PANEL_W,0,300); panel.Position=UDim2.new(0.5,-PANEL_W/2,0.5,-150)
+panel.Size=UDim2.new(0,PANEL_W,0,420); panel.Position=UDim2.new(0.5,-PANEL_W/2,0.5,-210)
 panel.BackgroundColor3=Color3.fromRGB(18,18,18); panel.BackgroundTransparency=1
 panel.BorderSizePixel=0; panel.Visible=false; panel.ZIndex=20
 panel.ClipsDescendants=true; panel.Active=true; panel.Parent=mainUI
@@ -594,49 +594,105 @@ local function hidePanel()
     task.delay(0.15,function() panel.Visible=false end)
 end
 
+-- Header
 local header=Instance.new("Frame")
-header.Size=UDim2.new(1,0,0,36); header.BackgroundColor3=Color3.fromRGB(30,30,30)
+header.Size=UDim2.new(1,0,0,50); header.BackgroundColor3=Color3.fromRGB(25,25,25)
 header.BorderSizePixel=0; header.ZIndex=21; header.Active=true; header.Parent=panel
 Instance.new("UICorner",header).CornerRadius=UDim.new(0,12)
 
-local pTitle=makeLabel(header,UDim2.new(0,10,0,0),UDim2.new(1,-40,1,0),14,true,22)
-pTitle.Text="⚙ "..CONFIG.HUB_NAME.." "..CONFIG.VERSION
+-- Avatar ใน header
+local hAvatarFrame=Instance.new("Frame")
+hAvatarFrame.Size=UDim2.new(0,36,0,36); hAvatarFrame.Position=UDim2.new(0,8,0.5,-18)
+hAvatarFrame.BackgroundColor3=Color3.fromRGB(40,40,40); hAvatarFrame.BorderSizePixel=0
+hAvatarFrame.ZIndex=22; hAvatarFrame.Parent=header
+Instance.new("UICorner",hAvatarFrame).CornerRadius=UDim.new(1,0)
+local hAvatarImg=Instance.new("ImageLabel")
+hAvatarImg.Size=UDim2.new(1,0,1,0); hAvatarImg.BackgroundTransparency=1
+hAvatarImg.Image="rbxthumb://type=AvatarHeadShot&id="..player.UserId.."&w=150&h=150"
+hAvatarImg.ZIndex=23; hAvatarImg.Parent=hAvatarFrame
+Instance.new("UICorner",hAvatarImg).CornerRadius=UDim.new(1,0)
 
-local closeBtn=makeBtn(header,UDim2.new(1,-34,0,4),UDim2.new(0,28,0,28),"✕",Color3.fromRGB(200,60,60),22)
-closeBtn.MouseButton1Click:Connect(function() hidePanel() end)
+-- ชื่อใน header
+local hName=makeLabel(header,UDim2.new(0,52,0,4),UDim2.new(1,-100,0,20),13,true,22)
+hName.Text=player.Name
+hName.TextColor3=Color3.fromRGB(255,255,255)
+
+local hSub=makeLabel(header,UDim2.new(0,52,0,24),UDim2.new(1,-100,0,16),10,false,22)
+hSub.Text=CONFIG.HUB_NAME.." "..CONFIG.VERSION.." | RWGXLC"
+hSub.TextColor3=Color3.fromRGB(150,150,150)
+
+-- ปุ่มปิด + ย่อ
+local closeBtn=makeBtn(header,UDim2.new(1,-34,0,10),UDim2.new(0,24,0,24),"✕",Color3.fromRGB(200,60,60),22)
+closeBtn.TextSize=12; closeBtn.MouseButton1Click:Connect(function() hidePanel() end)
+local minPanelBtn=makeBtn(header,UDim2.new(1,-62,0,10),UDim2.new(0,24,0,24),"–",Color3.fromRGB(60,60,60),22)
+minPanelBtn.TextSize=12
+
 addDrag(panel,nil)
-addResizeHandle(panel,200,260,22,function() saveSettings() end)
+addResizeHandle(panel,300,360,22,function() saveSettings() end)
 
-local tabBar=Instance.new("Frame")
-tabBar.Size=UDim2.new(1,0,0,32); tabBar.Position=UDim2.new(0,0,0,36)
-tabBar.BackgroundColor3=Color3.fromRGB(25,25,25)
-tabBar.BorderSizePixel=0; tabBar.ZIndex=21; tabBar.Active=true; tabBar.Parent=panel
+-- ===== Sidebar ด้านซ้าย =====
+local sidebar=Instance.new("Frame")
+sidebar.Size=UDim2.new(0,100,1,-50); sidebar.Position=UDim2.new(0,0,0,50)
+sidebar.BackgroundColor3=Color3.fromRGB(15,15,15); sidebar.BackgroundTransparency=0.2
+sidebar.BorderSizePixel=0; sidebar.ZIndex=21; sidebar.Active=true; sidebar.Parent=panel
 
-local tabNames={"🎨","⚙️","🎭","💾","👁️","👤","📊","🔔","🔧"}
-local tabLabels={"Color","System","Theme","Saves","Toggle","Info","Log","Notif","Dev"}
+-- Content ด้านขวา
+local content=Instance.new("Frame")
+content.Size=UDim2.new(1,-100,1,-50); content.Position=UDim2.new(0,100,0,50)
+content.BackgroundTransparency=1; content.BorderSizePixel=0; content.ZIndex=21
+content.ClipsDescendants=true; content.Active=true; content.Parent=panel
+
+local tabNames={"🎨 Color","⚙️ System","🎭 Theme","💾 Saves","👁️ Toggle","👤 Info","📊 Log","🔔 Notif","🔧 Dev"}
 local tabPages={}
 local tabBtns={}
 
-for i,icon in ipairs(tabNames) do
-    local tb=makeBtn(tabBar,UDim2.new((i-1)/9,1,0,2),UDim2.new(1/9,-2,1,-4),icon,Color3.fromRGB(40,40,40),22)
-    tb.TextSize=12; tabBtns[i]=tb
-    local tl=makeLabel(tb,UDim2.new(0,0,0.5,2),UDim2.new(1,0,0,8),6,false,23)
-    tl.Text=tabLabels[i]; tl.TextXAlignment=Enum.TextXAlignment.Center; tl.TextColor3=Color3.fromRGB(180,180,180)
+for i,name in ipairs(tabNames) do
+    -- Sidebar button
+    local tb=Instance.new("TextButton")
+    tb.Size=UDim2.new(1,0,0,40); tb.Position=UDim2.new(0,0,0,(i-1)*40)
+    tb.BackgroundColor3=i==1 and Color3.fromRGB(88,101,242) or Color3.fromRGB(15,15,15)
+    tb.BackgroundTransparency=i==1 and 0.2 or 0.8
+    tb.BorderSizePixel=0; tb.Text=name; tb.TextSize=11
+    tb.TextColor3=i==1 and Color3.fromRGB(255,255,255) or Color3.fromRGB(160,160,160)
+    tb.Font=Enum.Font.GothamBold; tb.ZIndex=22; tb.Active=true; tb.Parent=sidebar
+    tabBtns[i]=tb
+
+    -- Left accent bar
+    local accent=Instance.new("Frame")
+    accent.Size=UDim2.new(0,3,1,0); accent.Position=UDim2.new(0,0,0,0)
+    accent.BackgroundColor3=Color3.fromRGB(88,101,242)
+    accent.BorderSizePixel=0; accent.ZIndex=23; accent.Visible=i==1; accent.Parent=tb
+    tabBtns[i].accent=accent
+
+    -- Content page
     local page=Instance.new("Frame")
-    page.Size=UDim2.new(1,0,1,-68); page.Position=UDim2.new(0,0,0,68)
+    page.Size=UDim2.new(1,0,1,0); page.Position=UDim2.new(0,0,0,0)
     page.BackgroundTransparency=1; page.BorderSizePixel=0; page.ZIndex=21
-    page.Visible=(i==1); page.ClipsDescendants=true; page.Active=true; page.Parent=panel
+    page.Visible=(i==1); page.ClipsDescendants=true; page.Active=true; page.Parent=content
     tabPages[i]=page
 end
 
 local function switchTab(idx)
     for i,page in ipairs(tabPages) do
         page.Visible=(i==idx)
-        tabBtns[i].BackgroundColor3=i==idx and Color3.fromRGB(60,180,100) or Color3.fromRGB(40,40,40)
+        tabBtns[i].BackgroundColor3=i==idx and Color3.fromRGB(88,101,242) or Color3.fromRGB(15,15,15)
+        tabBtns[i].BackgroundTransparency=i==idx and 0.2 or 0.8
+        tabBtns[i].TextColor3=i==idx and Color3.fromRGB(255,255,255) or Color3.fromRGB(160,160,160)
+        tabBtns[i].accent.Visible=(i==idx)
     end
 end
 for i,tb in ipairs(tabBtns) do tb.MouseButton1Click:Connect(function() switchTab(i) end) end
 switchTab(1)
+
+-- MinPanel
+local panelMinimized=false
+minPanelBtn.MouseButton1Click:Connect(function()
+    panelMinimized=not panelMinimized
+    sidebar.Visible=not panelMinimized
+    content.Visible=not panelMinimized
+    minPanelBtn.Text=panelMinimized and "+" or "–"
+    tweenFrame(panel,{Size=UDim2.new(0,panelMinimized and PANEL_W or PANEL_W,0,panelMinimized and 50 or 420)},0.2)
+end)
 
 local function createSlider(parent,labelText,yPos,minVal,maxVal,currentVal,step,zIdx,callback)
     local lbl=makeLabel(parent,UDim2.new(0,10,0,yPos),UDim2.new(1,-60,0,15),11,false,zIdx); lbl.Text=labelText
@@ -727,36 +783,41 @@ local fpsCapLabel=makeLabel(sysPage,UDim2.new(0,10,0,228),UDim2.new(1,0,0,16),11
 fpsCapLabel.Text="🎯 FPS Cap"
 fpsCapLabel.TextColor3=Color3.fromRGB(200,200,200)
 
-local fpsCaps={10,15,30,45,60,144,9999}
-local fpsCapBtns={}
-local currentCapBtn=nil
+local fpsCapBox=Instance.new("TextBox")
+fpsCapBox.Size=UDim2.new(1,-80,0,28); fpsCapBox.Position=UDim2.new(0,10,0,248)
+fpsCapBox.BackgroundColor3=Color3.fromRGB(30,30,30); fpsCapBox.BorderSizePixel=0
+fpsCapBox.Text="60"; fpsCapBox.Font=Enum.Font.GothamBold; fpsCapBox.TextSize=13
+fpsCapBox.TextColor3=Color3.fromRGB(255,255,255)
+fpsCapBox.PlaceholderText="ใส่ FPS..."; fpsCapBox.PlaceholderColor3=Color3.fromRGB(100,100,100)
+fpsCapBox.ZIndex=22; fpsCapBox.Active=true; fpsCapBox.ClearTextOnFocus=false
+fpsCapBox.Parent=sysPage
+Instance.new("UICorner",fpsCapBox).CornerRadius=UDim.new(0,6)
 
-for i,cap in ipairs(fpsCaps) do
-    local col=(i-1)%4; local row=math.floor((i-1)/4)
-    local label=cap==9999 and "MAX" or tostring(cap)
-    local btn=makeBtn(sysPage,UDim2.new(col/4,col==0 and 10 or 4,0,248+row*30),UDim2.new(1/4,-8,0,24),label,Color3.fromRGB(50,50,50),22)
-    btn.TextSize=11
-    fpsCapBtns[i]=btn
-    btn.MouseButton1Click:Connect(function()
-        -- เปลี่ยนสีปุ่มที่เลือก
-        for _,b in ipairs(fpsCapBtns) do b.BackgroundColor3=Color3.fromRGB(50,50,50) end
-        btn.BackgroundColor3=Color3.fromRGB(60,180,100)
-        currentCapBtn=btn
-        -- ตั้ง FPS Cap
-        local ok=pcall(function()
-            if cap==9999 then
-                setfpscap(0) -- 0 = ไม่จำกัด
-            else
-                setfpscap(cap)
-            end
-        end)
-        if not ok then
-            -- ถ้าใช้ใน Studio จะ error เพราะไม่มี setfpscap
-            btn.Text=(cap==9999 and "MAX" or tostring(cap)).." ⚠️"
-            task.delay(1.5,function() btn.Text=cap==9999 and "MAX" or tostring(cap) end)
-        end
+local fpsCapBtn=makeBtn(sysPage,UDim2.new(1,-66,0,248),UDim2.new(0,58,0,28),"✅ Set",Color3.fromRGB(40,130,60),22)
+fpsCapBtn.TextSize=12
+fpsCapBtn.MouseButton1Click:Connect(function()
+    local val=tonumber(fpsCapBox.Text)
+    if not val then
+        fpsCapBtn.Text="❌ Error"
+        task.delay(1.5,function() fpsCapBtn.Text="✅ Set" end)
+        return
+    end
+    val=math.clamp(math.round(val),1,9999)
+    local ok=pcall(function()
+        if val>=9999 then setfpscap(0) else setfpscap(val) end
     end)
-end
+    if ok then
+        fpsCapBtn.Text="✅ Done!"
+        fpsCapBox.Text=val>=9999 and "MAX" or tostring(val)
+    else
+        fpsCapBtn.Text="⚠️ Executor only"
+    end
+    task.delay(2,function() fpsCapBtn.Text="✅ Set" end)
+end)
+
+local fpsCapHint=makeLabel(sysPage,UDim2.new(0,10,0,280),UDim2.new(1,-20,0,14),9,false,22)
+fpsCapHint.Text="💡 พิมพ์ตัวเลข FPS แล้วกด Set | 9999 = ไม่จำกัด"
+fpsCapHint.TextColor3=Color3.fromRGB(120,120,120)
 
 -- Tab 3: Theme
 local themePage=tabPages[3]
