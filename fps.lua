@@ -16,7 +16,7 @@ local CONFIG = {
 
     -- [ ข้อมูลทั่วไป ]
     HUB_NAME    = "UG Hub",               -- ชื่อโปรแกรม
-    VERSION     = "v6.5",                 -- เวอร์ชั่น
+    VERSION     = "v6.6",                 -- เวอร์ชั่น
     AUTHOR      = "regretevator638",       -- ชื่อผู้สร้าง
     DISCORD     = "discord.gg/v6Qh69hqd", -- ลิงค์ Discord
 
@@ -40,7 +40,7 @@ local CONFIG = {
 
     -- [ Developer Accounts — เข้าได้ทันทีไม่ต้องรอตรวจสอบ ]
     DEV_ACCOUNTS = {
-        "RWGXLC",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
+        "regretevator638",  -- บัญชี Developer หลัก (เปลี่ยนเป็นชื่อ Roblox ของคุณ)
         -- "username2",     -- บัญชีที่ 2 (เอา -- ออกเพื่อเปิดใช้)
     },
 
@@ -204,6 +204,55 @@ settings.sessionStart = os.time()
 -- ตัวแปรบอกว่าเป็น Dev หรือเปล่า
 local isDev = false
 
+-- ===== ตรวจจับ Executor =====
+local executorName = "Unknown"
+local executorWarning = false
+
+local function detectExecutor()
+    if syn and syn.request then executorName="Synapse X"
+    elseif KRNL_LOADED then executorName="Krnl"
+    elseif rconsoleprint then executorName="Script-Ware"
+    elseif identifyexecutor then
+        local ok,name=pcall(identifyexecutor)
+        if ok and name then
+            executorName=name
+            local lower=name:lower()
+            if lower:find("xeno") or lower:find("solara") then
+                executorWarning=true
+            end
+        end
+    elseif getexecutorname then
+        local ok,name=pcall(getexecutorname)
+        if ok and name then
+            executorName=name
+            local lower=name:lower()
+            if lower:find("xeno") or lower:find("solara") then
+                executorWarning=true
+            end
+        end
+    elseif typeof(Drawing)~="nil" then executorName="Executor (Unknown)"
+    else executorName="Roblox Studio" end
+end
+pcall(detectExecutor)
+
+-- ===== Console Log System =====
+local consoleLogs = {}
+local function addLog(msg, logType)
+    -- logType: "INF" "WRN" "ERR"
+    table.insert(consoleLogs, {
+        t = os.date("%H:%M:%S"),
+        msg = msg,
+        type = logType or "INF"
+    })
+    if #consoleLogs > 100 then table.remove(consoleLogs, 1) end
+end
+
+addLog("Application started, login pending", "INF")
+addLog("Executor: "..executorName, "INF")
+if executorWarning then
+    addLog("WARNING: "..executorName.." detected! (กากมาก)", "WRN")
+end
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UGHub"
 screenGui.ResetOnSpawn = false
@@ -218,6 +267,96 @@ task.spawn(function()
         end
     end
 end)
+
+-- ===== Error Toast (มุมขวาล่าง) =====
+local toastQueue = {}
+local toastActive = false
+
+local toastFrame = Instance.new("Frame")
+toastFrame.Size = UDim2.new(0,260,0,48)
+toastFrame.Position = UDim2.new(1,10,1,-60)
+toastFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+toastFrame.BackgroundTransparency = 0.1
+toastFrame.BorderSizePixel = 0
+toastFrame.ZIndex = 100
+toastFrame.Visible = false
+toastFrame.Parent = screenGui
+Instance.new("UICorner",toastFrame).CornerRadius = UDim.new(0,8)
+
+local toastIcon = Instance.new("TextLabel")
+toastIcon.Size = UDim2.new(0,36,1,0)
+toastIcon.BackgroundTransparency = 1
+toastIcon.Font = Enum.Font.GothamBold
+toastIcon.TextSize = 18
+toastIcon.ZIndex = 101
+toastIcon.Parent = toastFrame
+
+local toastMsg = Instance.new("TextLabel")
+toastMsg.Size = UDim2.new(1,-44,0,18)
+toastMsg.Position = UDim2.new(0,40,0,4)
+toastMsg.BackgroundTransparency = 1
+toastMsg.Font = Enum.Font.GothamBold
+toastMsg.TextSize = 11
+toastMsg.TextColor3 = Color3.fromRGB(255,255,255)
+toastMsg.TextXAlignment = Enum.TextXAlignment.Left
+toastMsg.TextWrapped = true
+toastMsg.ZIndex = 101
+toastMsg.Parent = toastFrame
+
+local toastSub = Instance.new("TextLabel")
+toastSub.Size = UDim2.new(1,-44,0,16)
+toastSub.Position = UDim2.new(0,40,0,24)
+toastSub.BackgroundTransparency = 1
+toastSub.Font = Enum.Font.Gotham
+toastSub.TextSize = 9
+toastSub.TextColor3 = Color3.fromRGB(180,180,180)
+toastSub.TextXAlignment = Enum.TextXAlignment.Left
+toastSub.ZIndex = 101
+toastSub.Parent = toastFrame
+
+local TweenService2 = game:GetService("TweenService")
+local function showToast(title, subtitle, toastType)
+    -- toastType: "error" "warn" "info" "success"
+    local colors = {
+        error   = {bg=Color3.fromRGB(180,30,30),   icon="❌", iconColor=Color3.fromRGB(255,100,100)},
+        warn    = {bg=Color3.fromRGB(160,110,0),   icon="⚠️", iconColor=Color3.fromRGB(255,200,50)},
+        info    = {bg=Color3.fromRGB(30,30,80),    icon="ℹ️", iconColor=Color3.fromRGB(100,150,255)},
+        success = {bg=Color3.fromRGB(20,80,30),    icon="✅", iconColor=Color3.fromRGB(80,255,120)},
+    }
+    local c = colors[toastType] or colors.info
+    addLog(title..(subtitle and " | "..subtitle or ""), toastType=="error" and "ERR" or toastType=="warn" and "WRN" or "INF")
+
+    table.insert(toastQueue, {title=title, subtitle=subtitle, c=c})
+    if toastActive then return end
+    toastActive = true
+
+    task.spawn(function()
+        while #toastQueue > 0 do
+            local t = table.remove(toastQueue, 1)
+            toastFrame.BackgroundColor3 = t.c.bg
+            toastIcon.Text = t.c.icon
+            toastIcon.TextColor3 = t.c.iconColor
+            toastMsg.Text = t.title
+            toastSub.Text = t.subtitle or ""
+            toastFrame.Position = UDim2.new(1,10,1,-60)
+            toastFrame.Visible = true
+            TweenService2:Create(toastFrame,TweenInfo.new(0.3,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.new(1,-270,1,-60)}):Play()
+            task.wait(3)
+            TweenService2:Create(toastFrame,TweenInfo.new(0.3,Enum.EasingStyle.Quad),{Position=UDim2.new(1,10,1,-60)}):Play()
+            task.wait(0.35)
+            toastFrame.Visible = false
+            task.wait(0.2)
+        end
+        toastActive = false
+    end)
+end
+
+-- แจ้งเตือน executor กาก
+if executorWarning then
+    task.delay(2, function()
+        showToast("เฮ้ย! มึงใช้ "..executorName, "โคตรกากเลยว่ะ 💀", "warn")
+    end)
+end
 
 local function makeLabel(parent,pos,size,textSize,bold,zidx)
     local l=Instance.new("TextLabel")
@@ -642,7 +781,7 @@ content.Size=UDim2.new(1,-100,1,-50); content.Position=UDim2.new(0,100,0,50)
 content.BackgroundTransparency=1; content.BorderSizePixel=0; content.ZIndex=21
 content.ClipsDescendants=true; content.Active=true; content.Parent=panel
 
-local tabNames={"🎨 Color","⚙️ System","🎭 Theme","💾 Saves","👁️ Toggle","👤 Info","📊 Log","🔔 Notif","🔧 Dev"}
+local tabNames={"🎨 Color","⚙️ System","🎭 Theme","💾 Saves","👁️ Toggle","👤 Info","📊 Log","🔔 Notif","🔧 Dev","🖥️ Console"}
 local tabPages={}
 local tabBtns={}
 
@@ -1083,6 +1222,55 @@ task.spawn(function()
     end
 end)
 
+-- ===== Console Tab (แท็บที่ 10) =====
+local consolePage=tabPages[10]
+
+local consoleTitle=makeLabel(consolePage,UDim2.new(0,8,0,4),UDim2.new(1,-80,0,16),12,true,22)
+consoleTitle.Text="🖥️ Console Log"
+consoleTitle.TextColor3=Color3.fromRGB(200,200,200)
+
+-- Executor Info
+local execLabel=makeLabel(consolePage,UDim2.new(0,8,0,24),UDim2.new(1,-16,0,14),10,false,22)
+execLabel.Text="⚙️ Executor: "..executorName
+execLabel.TextColor3=executorWarning and Color3.fromRGB(255,200,50) or Color3.fromRGB(100,200,255)
+
+local consoleClearBtn=makeBtn(consolePage,UDim2.new(1,-68,0,2),UDim2.new(0,60,0,20),"🗑️ Clear",Color3.fromRGB(150,50,50),22)
+consoleClearBtn.TextSize=10
+
+local consoleScroll=Instance.new("ScrollingFrame")
+consoleScroll.Size=UDim2.new(1,-8,1,-46); consoleScroll.Position=UDim2.new(0,4,0,42)
+consoleScroll.BackgroundColor3=Color3.fromRGB(10,10,10); consoleScroll.BackgroundTransparency=0.3
+consoleScroll.BorderSizePixel=0
+consoleScroll.ScrollBarThickness=3; consoleScroll.ZIndex=22; consoleScroll.Active=true; consoleScroll.Parent=consolePage
+Instance.new("UICorner",consoleScroll).CornerRadius=UDim.new(0,6)
+Instance.new("UIListLayout",consoleScroll).SortOrder=Enum.SortOrder.LayoutOrder
+
+local function refreshConsole()
+    for _,c in ipairs(consoleScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
+    local count=0
+    for i=#consoleLogs,math.max(1,#consoleLogs-49),-1 do
+        local entry=consoleLogs[i]
+        local lbl=Instance.new("TextLabel")
+        lbl.Size=UDim2.new(1,0,0,16); lbl.BackgroundTransparency=count%2==0 and 0.85 or 1
+        lbl.BackgroundColor3=Color3.fromRGB(20,20,20); lbl.Font=Enum.Font.Code; lbl.TextSize=9
+        local typeColor=entry.type=="ERR" and Color3.fromRGB(255,80,80) or entry.type=="WRN" and Color3.fromRGB(255,200,50) or Color3.fromRGB(150,200,255)
+        lbl.Text="["..entry.t.."] ["..entry.type.."] "..entry.msg
+        lbl.TextColor3=typeColor
+        lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.ZIndex=23; lbl.LayoutOrder=count
+        lbl.TextWrapped=true; lbl.Parent=consoleScroll
+        count+=1
+    end
+    consoleScroll.CanvasSize=UDim2.new(0,0,0,count*16)
+end
+
+consoleClearBtn.MouseButton1Click:Connect(function()
+    table.clear(consoleLogs)
+    refreshConsole()
+end)
+
+-- Auto refresh console เมื่อเปิดแท็บ
+tabBtns[10].MouseButton1Click:Connect(function() refreshConsole() end)
+
 -- Warning
 local warnFrame=Instance.new("Frame")
 warnFrame.Size=UDim2.new(0,220,0,32); warnFrame.Position=UDim2.new(0.5,-110,0,52)
@@ -1107,6 +1295,7 @@ local function showWarning(msg,color)
     if warnCooldown then return end
     warnCooldown=true; warnLabel.Text=msg; warnFrame.Visible=true
     addNotif(msg, color or Color3.fromRGB(255,100,100))
+    showToast(msg, nil, "warn")
     task.delay(3,function() warnFrame.Visible=false; task.delay(5,function() warnCooldown=false end) end)
 end
 local function showPingWarning(ping)
@@ -1115,30 +1304,53 @@ local function showPingWarning(ping)
     local msg="⚠️ Ping สูง! ("..ping.."ms)"
     pingWarnLabel.Text=msg; pingWarnFrame.Visible=true
     addNotif(msg, Color3.fromRGB(255,180,50))
+    showToast("Ping สูง!", ping.."ms — อาจ Lag", "warn")
     task.delay(3,function() pingWarnFrame.Visible=false; task.delay(10,function() pingWarnCooldown=false end) end)
 end
 
 -- Login
 local function checkLogin(username)
     username=username:gsub("%s+","")
-    if username=="" then return false,"⚠️ กรุณาใส่ชื่อก่อน",false end
+    if username=="" then
+        addLog("Login failed: empty username", "WRN")
+        return false,"⚠️ กรุณาใส่ชื่อก่อน",false
+    end
+
+    addLog("Login attempt: "..username, "INF")
 
     -- ตรวจ Dev Accounts ก่อนเลย เร็วที่สุด ไม่ต้องรอ API
     for _,dev in ipairs(CONFIG.DEV_ACCOUNTS) do
         if username:lower()==dev:lower() then
+            addLog("Developer Account verified: "..username, "INF")
             return true,"👑 Developer Account ยินดีต้อนรับ!",true
         end
     end
 
     -- ตรวจ Whitelist
     for _,w in ipairs(CONFIG.WHITELIST) do
-        if username:lower()==w:lower() then return true,"✅ เข้าใช้งานสำเร็จ!",false end
+        if username:lower()==w:lower() then
+            addLog("Whitelist verified: "..username, "INF")
+            return true,"✅ เข้าใช้งานสำเร็จ!",false
+        end
     end
 
-    -- ตรวจ Roblox API ปกติ
+    -- ตรวจจาก username ของ player โดยตรง (ไม่ต้องรอ API)
+    if username:lower()==player.Name:lower() then
+        addLog("Username matched player: "..username, "INF")
+        return true,"✅ ยืนยันตัวตนสำเร็จ!",false
+    end
+
+    -- ตรวจ Roblox API (fallback)
     local ok,userId=pcall(function() return Players:GetUserIdFromNameAsync(username) end)
-    if not ok then return false,"❌ ไม่พบ Username นี้ใน Roblox",false end
-    if userId~=player.UserId then return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อยู่",false end
+    if not ok then
+        addLog("API failed, checking by name only", "WRN")
+        -- ถ้า API ล้มเหลว (executor บางตัว) ให้เช็คชื่อตรงๆ แทน
+        return false,"❌ ตรวจสอบไม่ได้ ลองใส่ชื่อตัวเองให้ตรง",false
+    end
+    if userId~=player.UserId then
+        addLog("UserId mismatch for: "..username, "ERR")
+        return false,"❌ Username ไม่ตรงกับบัญชีที่ใช้อยู่",false
+    end
     return true,"✅ ยืนยันตัวตนสำเร็จ!",false
 end
 
